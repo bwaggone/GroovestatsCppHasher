@@ -25,22 +25,20 @@ int main(int argc, char **argv)
     for (const auto& pack : std::filesystem::directory_iterator(argv[1])) {
 		if (pack.is_directory()) {
 			for (const auto& song_dir : std::filesystem::directory_iterator(pack.path())) {
-				//if (song_dir.path().generic_string() == "C:/Games/ITGmania/Songs/3guys1pack/666!") { // tmp, for debugging
-					if (song_dir.is_directory()) {
-						std::string chosen_file = "";
-						for (const auto& entry : std::filesystem::directory_iterator(song_dir)) {
-							if (std::filesystem::path(entry).extension() == ".ssc") {
-								chosen_file = entry.path().generic_string();
-							}
-							else if (std::filesystem::path(entry).extension() == ".sm" && chosen_file.empty()) {
-								chosen_file = entry.path().generic_string();
-							}
+				if (song_dir.is_directory()) {
+					std::string chosen_file = "";
+					for (const auto& entry : std::filesystem::directory_iterator(song_dir)) {
+						if (std::filesystem::path(entry).extension() == ".ssc") {
+							chosen_file = entry.path().generic_string();
 						}
-						if (!chosen_file.empty()) {
-							files_to_hash.push_back(chosen_file);
+						else if (std::filesystem::path(entry).extension() == ".sm" && chosen_file.empty()) {
+							chosen_file = entry.path().generic_string();
 						}
 					}
-				//}
+					if (!chosen_file.empty()) {
+						files_to_hash.push_back(chosen_file);
+					}
+				}
 			}
 		}
 	}
