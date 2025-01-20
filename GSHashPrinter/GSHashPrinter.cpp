@@ -20,8 +20,8 @@ void GetGrooveStatsHashes(Song& song)
 
 int main(int argc, char **argv)
 {
-	std::cout << "Beginning Recursive Read through: " << argv[1] << "\n";
-	std::vector<std::string> files_to_hash;
+    std::cout << "Beginning Recursive Read through: " << argv[1] << "\n";
+    std::vector<std::string> files_to_hash;
     for (const auto& pack : std::filesystem::directory_iterator(argv[1])) {
 		if (pack.is_directory()) {
 			for (const auto& song_dir : std::filesystem::directory_iterator(pack.path())) {
