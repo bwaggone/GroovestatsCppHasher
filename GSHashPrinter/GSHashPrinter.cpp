@@ -2,8 +2,6 @@
 #include <vector>
 #include <filesystem>
 
-#include "GSHashPrinter.h"
-
 #include "itgm-lib/NotesLoader.h"
 #include "itgm-lib/RageUtil.h"
 
