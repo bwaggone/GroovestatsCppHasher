@@ -16,6 +16,7 @@ namespace NotesLoader
 	 * @param sSubTitleOut the ventual sub title. */
 	void GetMainAndSubTitlesFromFullTitle( const std::string &sFullTitle, 
 					      std::string &sMainTitleOut, std::string &sSubTitleOut );
+
 	/**
 	 * @brief Attempt to load a Song from the given directory.
 	 * @param sPath the path to the file.
@@ -24,9 +25,14 @@ namespace NotesLoader
 	 * @return its success or failure. */
 	bool LoadFromDir( const std::string &sPath, Song &out );
 
-	bool LoadFromSSC(MsdFile &in, Song& out);
-
 	bool LoadFromSM(MsdFile& in, Song& out);
+
+	enum SSCLoadingStates
+	{
+		GETTING_SONG_INFO, /**< Retrieving song information. */
+		GETTING_STEP_INFO, /**< Retrieving step information. */
+		NUM_SSCLoadingStates /**< The number of states used. */
+	};
 }
 
 #endif

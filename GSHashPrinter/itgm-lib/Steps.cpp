@@ -3,6 +3,9 @@
 #include "Steps.h"
 #include "RageUtil.h"
 
+Steps::Steps(Song* song) : song_(song) {}
+
+
 std::string Steps::MinimizeChartString() {
 
 	// We can potentially minimize the chart to get the most compressed

@@ -1,6 +1,20 @@
 #include "Song.h"
 #include "RageUtil.h"
 
+
+Steps* Song::CreateSteps() {
+	Steps* steps = new Steps(this);
+	InitSteps(steps);
+	return steps;
+}
+
+void Song::InitSteps(Steps* steps) {
+	steps->SetDisplayBPM(display_bpm_);
+	steps->SetMinBPM(this->min_bpm_);
+	steps->SetMaxBPM(this->max_bpm_);
+}
+
+
 void Song::SetGSHashes() {
 	for (Steps& step : steps_) {
 		step.CalculateAndSetGSHash(bpms_);

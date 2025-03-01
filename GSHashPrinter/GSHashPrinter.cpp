@@ -1,9 +1,9 @@
 ﻿#include <filesystem>
 #include <vector>
+#include <iostream>
 #include <filesystem>
 
 #include "itgm-lib/NotesLoader.h"
-#include "itgm-lib/RageUtil.h"
 
 using namespace std;
 using namespace std::filesystem;

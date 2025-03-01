@@ -8,7 +8,7 @@ include("CMakeProject-tommath.cmake")
 # Add source to this project's executable.
 add_executable (GSHashPrinter
 "GSHashPrinter.cpp"
-    "itgm-lib/NotesLoader.cpp" "itgm-lib/NotesLoader.h" "itgm-lib/MsdFile.cpp" "itgm-lib/MsdFile.h"  "itgm-lib/Song.h" "itgm-lib/Song.cpp" "itgm-lib/Steps.h" "itgm-lib/Steps.cpp" "itgm-lib/RageUtil.h" "itgm-lib/RageUtil.cpp")
+    "itgm-lib/NotesLoader.cpp" "itgm-lib/NotesLoader.h" "itgm-lib/MsdFile.cpp" "itgm-lib/MsdFile.h"  "itgm-lib/Song.h" "itgm-lib/Song.cpp" "itgm-lib/Steps.h" "itgm-lib/Steps.cpp" "itgm-lib/RageUtil.h" "itgm-lib/RageUtil.cpp" "itgm-lib/TimingSegment.h" "itgm-lib/TimingSegment.cpp" "itgm-lib/TimingData.h" "itgm-lib/TimingData.cpp" "itgm-lib/ConstantsAndTypes.h" "itgm-lib/NotesLoaderSSC.h" "itgm-lib/NotesLoaderSSC.cpp" "itgm-lib/NotesLoaderSM.h" "itgm-lib/NotesLoaderSM.cpp" "itgm-lib/NoteTypes.h")
 target_compile_features(GSHashPrinter PUBLIC cxx_std_17)
 target_link_libraries(GSHashPrinter PUBLIC tommath tomcrypt)
 
