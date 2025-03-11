@@ -24,4 +24,12 @@ inline float NoteRowToBeat(int iRow) { return iRow / (float)ROWS_PER_BEAT; }
  */
 static inline int ToNoteRow(float beat) { return BeatToNoteRow(beat); }
 
+
+/**
+ * @brief Convert the note row to beat.
+ * @param row the row to convert.
+ */
+static inline float ToBeat(int row) { return NoteRowToBeat(row); }
+
+
 #endif

@@ -27,6 +27,7 @@ public:
 
 	// Minimizes the chart string into part of the hash that's used for GrooveStats.
 	std::string MinimizeChartString();
+	void SetSMNoteData(const std::string& notes_comp_);
 
 	TimingData timing_data_;
 

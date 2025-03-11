@@ -35,6 +35,16 @@ inline T ToDerived(const TimingSegment* t, TimingSegmentType tst)
 
 /* ToBPM(TimingSegment*), ToTimeSignature(TimingSegment*), etc. */
 TimingSegmentToX(BPM, BPM);
+TimingSegmentToX(Stop, STOP);
+TimingSegmentToX(Delay, DELAY);
+TimingSegmentToX(TimeSignature, TIME_SIG);
+TimingSegmentToX(Warp, WARP);
+TimingSegmentToX(Label, LABEL);
+TimingSegmentToX(Tickcount, TICKCOUNT);
+TimingSegmentToX(Combo, COMBO);
+TimingSegmentToX(Speed, SPEED);
+TimingSegmentToX(Scroll, SCROLL);
+TimingSegmentToX(Fake, FAKE);
 
 #undef TimingSegmentToXWithName
 #undef TimingSegmentToX
@@ -130,12 +140,22 @@ public:
 		DefineSegmentWithName( Seg##Segment, Seg, SEGMENT_##SegType )
 
 	DefineSegment(BPM, BPM);
+	DefineSegment(Stop, STOP);
+	DefineSegment(Delay, DELAY);
+	DefineSegment(Warp, WARP);
+	DefineSegment(Label, LABEL);
+	DefineSegment(Tickcount, TICKCOUNT);
+	DefineSegment(Combo, COMBO);
+	DefineSegment(Speed, SPEED);
+	DefineSegment(Scroll, SCROLL);
+	DefineSegment(Fake, FAKE);
+	DefineSegment(TimeSignature, TIME_SIG);
 
 #undef DefineSegmentWithName
 #undef DefineSegment
 
-private:
 	float beat0OffsetInSeconds_;
+private:
 	std::string filename_;
 
 protected:

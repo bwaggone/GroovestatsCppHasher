@@ -5,6 +5,8 @@
 #include <tomcrypt.h>
 #include <vector>
 
+#include <algorithm>
+
 #include "RageUtil.h"
 
 
@@ -133,6 +135,38 @@ namespace util {
 		hash_descriptor[iHash].done(&hash, digest);
 
 		return std::string((const char*)digest, sizeof(digest));
+	}
+
+	float HHMMSSToSeconds(const std::string &sHHMMSS)
+	{
+		std::vector<std::string> arrayBits;
+		split(sHHMMSS, ":", arrayBits, false);
+
+		while (arrayBits.size() < 3)
+			arrayBits.insert(arrayBits.begin(), "0");	// pad missing bits
+
+		float fSeconds = 0;
+		fSeconds += std::stoi(arrayBits[0]) * 60 * 60;
+		fSeconds += std::stoi(arrayBits[1]) * 60;
+		fSeconds += std::stof(arrayBits[2]);
+
+		return fSeconds;
+	}
+
+	std::string upper(std::string in) {
+		std::transform(in.begin(), in.end(), in.begin(), ::toupper);
+		return in;
+	}
+
+	void TrimRight(std::string& sStr, const char* s)
+	{
+		int n = sStr.size();
+		while (n > 0 && strchr(s, sStr[n - 1]))
+			n--;
+
+		/* Delete from n to the end. If n == sStr.size(), nothing is deleted;
+		 * if n == 0, the whole string is erased. */
+		sStr.erase(sStr.begin() + n, sStr.end());
 	}
 
 }

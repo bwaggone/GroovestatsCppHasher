@@ -1,7 +1,10 @@
 #ifndef NotesLoaderSM_H
 #define NotesLoaderSM_H
 
+#include "Attack.h"
+#include "BackgroundUtil.h"
 #include "MsdFile.h" // we require the struct from here.
+#include "TimingData.h"
 
 #include <vector>
 
@@ -36,6 +39,32 @@ protected:
 	std::string GetFileExtension() const { return fileExt; }
 
 public:
+	// SetSongTitle and GetSongTitle changed to public to allow the functions
+	// used by the parser helper to access them. -Kyz
+	/**
+	 * @brief Set the song title.
+	 * @param t the song title. */
+	virtual void SetSongTitle(const std::string& title);
+
+	/**
+	 * @brief Get the song title.
+	 * @return the song title. */
+	virtual std::string GetSongTitle() const;
+
+	float RowToBeat(std::string line, const int rowsPerBeat);
+
+	void ProcessInstrumentTracks(Song& out, const std::string& sParam);
+	void ProcessBGChanges(Song& out, const std::string& sValueName, const std::string& sPath, const std::string& sParam);
+	void ParseBGChangesString(const std::string& _sChanges, std::vector<std::vector<std::string> >& vvsAddTo, const std::string& sSongDir);
+	std::vector<std::string> GetSongDirFiles(const std::string& sSongDir);
+	bool LoadFromBGChangesVector(BackgroundChange& change, std::vector<std::string> aBGChangeValues);
+	void ProcessAttackString(std::vector<std::string>& attacks, MsdFile::value_t params);
+	void ProcessAttacks(AttackArray& attacks, MsdFile::value_t params);
+	void ProcessDelays(TimingData& out, std::string line, int rowsPerBeat = -1);
+	void SMLoader::ProcessTimeSignatures(TimingData& out, const std::string line, const int rowsPerBeat = -1);
+	void ProcessTickcounts(TimingData& out, const std::string line, const int rowsPerBeat = -1);
+	virtual void ProcessSpeeds(TimingData& out, const std::string line, const int rowsPerBeat = -1);
+	virtual void ProcessFakes(TimingData& out, const std::string line, const int rowsPerBeat = -1);
 
 private:
 	/** @brief The file extension in use. */

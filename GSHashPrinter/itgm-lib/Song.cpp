@@ -1,6 +1,25 @@
+#include "BackgroundUtil.h"
 #include "Song.h"
 #include "RageUtil.h"
 
+const std::string& InstrumentTrackToString(InstrumentTrack it) {
+	return "";
+};
+
+InstrumentTrack StringToInstrumentTrack(const std::string& s) {
+	static const std::unordered_map<std::string, InstrumentTrack> instrument_map = {
+		{"InstrumentTrack_Guitar", InstrumentTrack_Guitar},
+		{"InstrumentTrack_Rhythm", InstrumentTrack_Rhythm},
+		{"InstrumentTrack_Bass", InstrumentTrack_Bass},
+		{"InstrumentTrack_Invalid", InstrumentTrack_Invalid},
+		{"NUM_InstrumentTrack", NUM_InstrumentTrack},
+	};
+	auto it = instrument_map.find(s);
+	if (it != instrument_map.end()) {
+		return it->second;
+	}
+	return InstrumentTrack_Invalid;
+};
 
 Steps* Song::CreateSteps() {
 	Steps* steps = new Steps(this);
@@ -46,3 +65,36 @@ void Song::SetBpms(const std::string& in) {
 
 	bpms_ = util::join(",", all_bpms);
 }
+
+void Song::SetSpecifiedLastSecond(const float f)
+{
+	this->specified_last_second = f;
+}
+
+/*const std::vector<BackgroundChange>& Song::GetBackgroundChanges(BackgroundLayer bl) const
+{
+	return *(m_BackgroundChanges[bl]);
+}
+
+std::vector<BackgroundChange>& Song::GetBackgroundChanges(BackgroundLayer bl)
+{
+	return *(m_BackgroundChanges[bl]);
+}
+
+void Song::AddBackgroundChange(BackgroundLayer iLayer, BackgroundChange seg)
+{
+	// Delete old background change at this start beat, if any.
+	auto& changes = GetBackgroundChanges(iLayer);
+	for (std::vector<BackgroundChange>::iterator bgc = changes.begin(); bgc != changes.end(); ++bgc)
+	{
+		if (bgc->m_fStartBeat == seg.m_fStartBeat)
+		{
+			GetBackgroundChanges(iLayer).erase(bgc);
+			break;
+		}
+	}
+
+	// TODO bwaggone: This
+	//BackgroundUtil::AddBackgroundChange(GetBackgroundChanges(iLayer), seg);
+}
+*/

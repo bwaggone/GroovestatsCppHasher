@@ -94,3 +94,12 @@ void Steps::CalculateAndSetGSHash(std::string bpm_string) {
 	std::string chart_and_bpms = MinimizeChartString() + bpm_string;
 	SetGSHash(util::BinaryToHex(util::GetSHA1ForString(chart_and_bpms)).substr(0, 16));
 }
+
+void Steps::SetSMNoteData(const std::string& notes_comp_)
+{
+	/*m_pNoteData->Init();
+	m_bNoteDataIsFilled = false;
+
+	m_sNoteDataCompressed = notes_comp_;
+	m_iHash = 0;*/
+}
