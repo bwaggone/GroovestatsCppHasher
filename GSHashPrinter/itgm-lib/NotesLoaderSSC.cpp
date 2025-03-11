@@ -631,7 +631,7 @@ bool SSCLoader::LoadFromSimfile(const std::string& sPath, Song& out) {
 					pNewNotes->timing_data_ = stepsTiming;
 				}
 				step_tag.has_own_timing = false;
-				//pNewNotes->SetSMNoteData(sParams[1]);
+				pNewNotes->SetSMNoteData(sParams[1]);
 				//pNewNotes->TidyUpData();
 				//pNewNotes->SetFilename(sPath);
 				//out.AddSteps(pNewNotes);
