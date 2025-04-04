@@ -60,7 +60,7 @@ bool NotesLoader::LoadFromSM(MsdFile& in, Song& out) {
 			util::Trim(steps_type);
 			util::Trim(difficulty);
 			util::Trim(note_data);
-			out.AddSteps(note_data, difficulty, steps_type);
+			//out.AddSteps(note_data, difficulty, steps_type);
 		}
 		if (valueName == "BPMS") {
 			out.SetBpms(matcher);

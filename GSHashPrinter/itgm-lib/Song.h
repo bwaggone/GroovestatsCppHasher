@@ -48,20 +48,25 @@ public:
 	float GetMinBPM() { return min_bpm_; }
 	float GetMaxBPM() { return max_bpm_; }
 
-	void AddSteps(const std::string& in, std::string diff, std::string steps_type) {
-		steps_.push_back(Steps(in, diff, steps_type));
-	}
+	void AddSteps(Steps* steps);
+
+	//void AddSteps(const std::string& in, std::string diff, std::string steps_type) {
+	//	steps_.push_back(Steps(in, diff, steps_type));
+	//}
 	std::vector<Steps> GetSteps() { return steps_; }
 	std::string GetBpms() { return bpms_; }
 	std::string GetPath() { return song_path_; }
 	void Song::SetBpms(const std::string& in);
 	void SetSpecifiedLastSecond(const float f);
 	void SetGSHashes();
+	void SetFirstSecond(const float f) { firstSecond = f; }
+	void SetLastSecond(const float f) { lastSecond = f; }
+	void SetFileName(const std::string fn) { filename = fn; }
 	//void AddBackgroundChange(BackgroundLayer iLayer, BackgroundChange seg);
 	//const std::vector<BackgroundChange>& GetBackgroundChanges(BackgroundLayer bl) const;
 	//std::vector<BackgroundChange>& GetBackgroundChanges(BackgroundLayer bl);
 
-
+	std::string filename;
 	TimingData timing_data_;
 	float version;
 	std::string main_title;
@@ -87,6 +92,10 @@ public:
 	std::vector<std::string> instrument_track_files;
 	float music_sample_start_seconds;
 	float music_sample_length_seconds;
+	float firstSecond;
+	float lastSecond;
+	bool has_music;
+	bool has_banner;
 	enum SelectionDisplay
 	{
 		SHOW_ALWAYS,	/**< always show on the wheel. */
@@ -103,6 +112,7 @@ private:
 	float min_bpm_;
 	float max_bpm_;
 	float specified_last_second;
+	std::vector<Steps*> m_vpSteps;
 	//std::vector<BackgroundChange>*	m_BackgroundChanges[NUM_BackgroundLayer];
 
 

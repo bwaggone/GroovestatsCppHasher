@@ -64,6 +64,7 @@ public:
 	void SMLoader::ProcessTimeSignatures(TimingData& out, const std::string line, const int rowsPerBeat = -1);
 	void ProcessTickcounts(TimingData& out, const std::string line, const int rowsPerBeat = -1);
 	virtual void ProcessSpeeds(TimingData& out, const std::string line, const int rowsPerBeat = -1);
+	virtual void ProcessCombos(TimingData&,const std::string line, const int rowsPerBeat = -1) {}
 	virtual void ProcessFakes(TimingData& out, const std::string line, const int rowsPerBeat = -1);
 
 private:

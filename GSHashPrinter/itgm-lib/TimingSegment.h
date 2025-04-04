@@ -308,8 +308,6 @@ struct ComboSegment : public TimingSegment
 	void SetCombo(int iCombo) { m_iCombo = iCombo; }
 	void SetMissCombo(int iCombo) { m_iMissCombo = iCombo; }
 
-	std::vector<float> GetValues() const;
-
 	bool operator==(const ComboSegment& other) const
 	{
 		COMPARE(m_iCombo);

@@ -33,6 +33,23 @@ void Song::InitSteps(Steps* steps) {
 	steps->SetMaxBPM(this->max_bpm_);
 }
 
+void Song::AddSteps(Steps* steps)
+{
+	// Songs of unknown stepstype are saved as a forwards compatibility feature
+	// so that editing a simfile made by a future version that has a new style
+	// won't delete those steps. -Kyz
+	if (steps->GetStepsTypeEnum() != enums::StepsType_Invalid)
+	{
+		m_vpSteps.push_back(steps);
+		//ASSERT_M(pSteps->m_StepsType < NUM_StepsType, ssprintf("%i", pSteps->m_StepsType));
+		//m_vpStepsByType[pSteps->m_StepsType].push_back(pSteps);
+	}
+	else
+	{
+		//m_UnknownStyleSteps.push_back(pSteps);
+	}
+}
+
 
 void Song::SetGSHashes() {
 	for (Steps& step : steps_) {

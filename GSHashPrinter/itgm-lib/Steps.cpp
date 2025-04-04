@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <regex>
 
 #include "Steps.h"
@@ -97,9 +98,107 @@ void Steps::CalculateAndSetGSHash(std::string bpm_string) {
 
 void Steps::SetSMNoteData(const std::string& notes_comp_)
 {
-	/*m_pNoteData->Init();
+	note_data_.Init();
 	m_bNoteDataIsFilled = false;
-
 	m_sNoteDataCompressed = notes_comp_;
-	m_iHash = 0;*/
+}
+
+void Steps::SetStepsType(std::string steps_type) {
+	for (char& c : steps_type) {
+		c = std::tolower(c);
+	}
+	if (enums::kStringToStepsType.find(steps_type) == enums::kStringToStepsType.end()) {
+		steps_type_ = enums::StepsType_Invalid;
+		return;
+	}
+	steps_type_ = enums::kStringToStepsType[steps_type];
+}
+
+void Steps::DeAutogen(bool copy_note_data) {
+	// TODO (bwaggone): This.
+	/*if (!parent)
+		return; // OK
+
+	if (bCopyNoteData)
+		Decompress();	// fills in m_pNoteData with sliding window transform
+
+	m_sDescription = Real()->m_sDescription;
+	m_sChartStyle = Real()->m_sChartStyle;
+	m_Difficulty = Real()->m_Difficulty;
+	m_iMeter = Real()->m_iMeter;
+	std::copy(Real()->m_CachedRadarValues, Real()->m_CachedRadarValues + NUM_PLAYERS, m_CachedRadarValues);
+	std::copy(Real()->m_CachedTechCounts, Real()->m_CachedTechCounts + NUM_PLAYERS, m_CachedTechCounts);
+
+	m_CachedNpsPerMeasure.assign(Real()->m_CachedNpsPerMeasure.begin(), Real()->m_CachedNpsPerMeasure.end());
+	m_CachedNotesPerMeasure.assign(Real()->m_CachedNotesPerMeasure.begin(), Real()->m_CachedNotesPerMeasure.end());
+
+
+	m_sCredit = Real()->m_sCredit;
+	parent = nullptr;
+
+	if (bCopyNoteData)
+		Compress();*/
+}
+
+void Steps::SetChartStyle(std::string chart_style) {
+	DeAutogen();
+	chart_style_ = chart_style;
+}
+
+bool Steps::MakeValidEditDescription(std::string& preferred_description)
+{
+	if (int(preferred_description.size()) > kMaxStepsDescriptionLength)
+	{
+		preferred_description = preferred_description.substr(0, std::min(static_cast<int>(preferred_description.size()), kMaxStepsDescriptionLength));
+		return true;
+	}
+	return false;
+}
+
+void Steps::SetDifficultyAndDescription(enums::Difficulty difficulty, std::string desc)
+{
+	DeAutogen();
+	difficulty_ = difficulty;
+	description_ = desc;
+	if (GetDifficulty() == enums::Difficulty_Edit)
+		MakeValidEditDescription(description_);
+}
+
+
+void Steps::SetMeter(int meter) {
+	DeAutogen();
+	meter_ = meter;
+}
+
+// bwaggone TODO: this
+void Steps::TidyUpData()
+{
+	// Don't set the StepsType to dance single if it's invalid.  That just
+	// causes unrecognized charts to end up where they don't belong.
+	// Leave it as StepsType_Invalid so the Song can handle it specially.  This
+	// is a forwards compatibility feature, so that if a future version adds a
+	// new style, editing a simfile with unrecognized Steps won't silently
+	// delete them. -Kyz
+	/*if (steps_type_enum_ == StepsType_Invalid)
+	{
+		//LOG->Warn("Detected steps with unknown style '%s' in '%s'", m_StepsTypeStr.c_str(), m_pSong->m_sSongFileName.c_str());
+	}
+	else if (steps_type_ == "")
+	{
+		//steps_type_ = GAMEMAN->GetStepsTypeInfo(m_StepsType).szName;
+	}
+
+	if (GetDifficulty() == Difficulty_Invalid)
+		SetDifficulty(StringToDifficulty(GetDescription()));
+
+	if (GetDifficulty() == Difficulty_Invalid)
+	{
+		if (GetMeter() == 1)	SetDifficulty(Difficulty_Beginner);
+		else if (GetMeter() <= 3)	SetDifficulty(Difficulty_Easy);
+		else if (GetMeter() <= 6)	SetDifficulty(Difficulty_Medium);
+		else				SetDifficulty(Difficulty_Hard);
+	}
+
+	if (GetMeter() < 1) // meter is invalid
+		SetMeter(int(PredictMeter()));*/
 }

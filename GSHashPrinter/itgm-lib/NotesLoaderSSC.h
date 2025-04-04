@@ -35,8 +35,8 @@ struct SSCLoader : public SMLoader
 	void ProcessStops(TimingData&, const std::string);
 	void ProcessWarps(TimingData&, const std::string, const float);
 	void ProcessLabels(TimingData&, const std::string);
-	//virtual void ProcessCombos(TimingData&, const std::string, const int = -1);
-	//void ProcessScrolls(TimingData&, const std::string);*/
+	virtual void ProcessCombos(TimingData&, const std::string, const int = -1);
+	void ProcessScrolls(TimingData&, const std::string);
 };
 
 #endif

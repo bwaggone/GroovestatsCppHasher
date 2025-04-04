@@ -18,6 +18,8 @@ struct StepsTagInfo
 	const MsdFile::value_t* params;
 	const std::string& path;
 	bool has_own_timing;
+	bool ssc_format;
+	bool for_load_edit = false;
 	StepsTagInfo(SSCLoader* l, Song* s, const std::string& p)
 		: loader(l), song(s), path(p), has_own_timing(false)
 	{}
@@ -249,7 +251,7 @@ void SetSongTickCounts(SongTagInfo& info)
 {
 	info.loader->ProcessTickcounts(info.song->timing_data_, (*info.params)[1]);
 }
-/*void SetSongCombos(SongTagInfo& info)
+void SetSongCombos(SongTagInfo& info)
 {
 	info.loader->ProcessCombos(info.song->timing_data_, (*info.params)[1]);
 }
@@ -267,38 +269,151 @@ void SetSongFakes(SongTagInfo& info)
 }
 void SetFirstSecond(SongTagInfo& info)
 {
-	if (info.from_cache)
-	{
 		info.song->SetFirstSecond(std::stof((*info.params)[1]));
-	}
 }
 void SetLastSecond(SongTagInfo& info)
 {
-	if (info.from_cache)
-	{
 		info.song->SetLastSecond(std::stof((*info.params)[1]));
-	}
 }
 void SetSongFilename(SongTagInfo& info)
 {
-	if (info.from_cache)
-	{
-		info.song->m_sSongFileName = (*info.params)[1];
-	}
+		info.song->SetFileName((*info.params)[1]);
 }
 void SetHasMusic(SongTagInfo& info)
 {
-	if (info.from_cache)
-	{
-		info.song->m_bHasMusic = StringToInt((*info.params)[1]) != 0;
-	}
+	info.song->has_music = std::stoi((*info.params)[1]) != 0;
 }
 void SetHasBanner(SongTagInfo& info)
 {
-	if (info.from_cache)
+	info.song->has_banner = std::stoi((*info.params)[1]) != 0;
+}
+
+// Functions for steps tags go below this line. -Kyz
+/****************************************************************/
+void SetStepsVersion(StepsTagInfo& info)
+{
+	info.song->version = std::stof((*info.params)[1]);
+}
+void SetChartName(StepsTagInfo& info)
+{
+	std::string name = (*info.params)[1];
+	util::Trim(name);
+	info.steps->SetChartName(name);
+}
+void SetStepsType(StepsTagInfo& info)
+{
+	info.steps->SetStepsType((*info.params)[1]);
+	info.steps->SetStepsTypeStr((*info.params)[1]);
+	info.ssc_format = true;
+}
+void SetChartStyle(StepsTagInfo& info)
+{
+	info.steps->SetChartStyle((*info.params)[1]);
+	info.ssc_format = true;
+}
+void SetDescription(StepsTagInfo& info)
+{
+	std::string name = (*info.params)[1];
+	util::Trim(name);
+	if (info.song->version < VERSION_CHART_NAME_TAG && !info.for_load_edit)
 	{
-		info.song->m_bHasBanner = StringToInt((*info.params)[1]) != 0;
+		info.steps->SetChartName(name);
 	}
+	else
+	{
+		info.steps->SetDescription(name);
+	}
+	info.ssc_format = true;
+}
+void SetDifficulty(StepsTagInfo& info)
+{
+	info.ssc_format = true;
+	std::string diff = (*info.params)[1];
+	for (char& c : diff) {
+		c = std::tolower(c);
+	}
+
+	if (enums::kStringToDifficulty.find(diff) == enums::kStringToDifficulty.end()) {
+		info.steps->SetDifficulty(enums::Difficulty_Invalid);
+		return;
+	}
+	info.steps->SetDifficulty(enums::kStringToDifficulty[diff]);
+}
+void SetMeter(StepsTagInfo& info)
+{
+	info.steps->SetMeter(std::stoi((*info.params)[1]));
+	info.ssc_format = true;
+}
+/*void SetRadarValues(StepsTagInfo& info)
+{
+	if (info.from_cache || info.for_load_edit)
+	{
+		std::vector<std::string> values;
+		split((*info.params)[1], ",", values, true);
+		// Instead of trying to use the version to figure out how many
+		// categories to expect, look at the number of values and split them
+		// evenly. -Kyz
+		size_t cats_per_player = values.size() / NUM_PlayerNumber;
+		RadarValues v[NUM_PLAYERS];
+		FOREACH_PlayerNumber(pn)
+		{
+			for (size_t i = 0; i < cats_per_player; ++i)
+			{
+				v[pn][i] = std::stof(values[pn * cats_per_player + i]);
+			}
+		}
+		info.steps->SetCachedRadarValues(v);
+	}
+	else
+	{
+		// just recalc at time.
+	}
+	info.ssc_format = true;
+}
+
+void SetTechCounts(StepsTagInfo& info)
+{
+	if (info.from_cache || info.for_load_edit)
+	{
+		std::vector<std::string> values;
+		split((*info.params)[1], ",", values, true);
+		std::size_t cats_per_player = values.size() / NUM_PlayerNumber;
+		TechCounts v[NUM_PLAYERS];
+		FOREACH_PlayerNumber(pn)
+		{
+			for (std::size_t i = 0; i < cats_per_player; ++i)
+			{
+				v[pn][i] = std::stof(values[pn * cats_per_player + i]);
+			}
+		}
+		info.steps->SetCachedTechCounts(v);
+	}
+	else
+	{
+		// just recalc at time.
+	}
+	info.ssc_format = true;
+}
+
+void SetMeasureInfo(StepsTagInfo& info)
+{
+	if (info.from_cache || info.for_load_edit)
+	{
+		std::vector<std::string> values;
+		split((*info.params)[1], "|", values, true);
+
+		MeasureInfo v[NUM_PLAYERS];
+		FOREACH_PlayerNumber(pn)
+		{
+			v[pn].FromString(values[pn]);
+		}
+		info.steps->SetCachedMeasureInfo(v);
+	}
+	else
+	{
+		// just recalc at time.
+	}
+	info.ssc_format = true;
 }*/
 
 void SetDisplayBPM(SongTagInfo& info)
@@ -319,6 +434,29 @@ void SetDisplayBPM(SongTagInfo& info)
 		else
 		{
 			info.song->SetMaxBPM(std::stof((*info.params)[2]));
+		}
+	}
+}
+
+void SetStepsDisplayBPM(StepsTagInfo& info)
+{
+	// #DISPLAYBPM:[xxx][xxx:xxx]|[*];
+	if ((*info.params)[1] == "*")
+	{
+		info.steps->SetDisplayBPM(enums::DISPLAY_BPM_RANDOM);
+	}
+	else if ((*info.params)[1] != "")
+	{
+		info.steps->SetDisplayBPM(enums::DISPLAY_BPM_SPECIFIED);
+		float min = std::stof((*info.params)[1]);
+		info.steps->SetMinBPM(min);
+		if ((*info.params)[2].empty())
+		{
+			info.steps->SetMaxBPM(min);
+		}
+		else
+		{
+			info.steps->SetMaxBPM(std::stof((*info.params)[2]));
 		}
 	}
 }
@@ -381,17 +519,17 @@ struct ssc_parser_helper_t
 		song_tag_handlers["LABELS"] = &SetSongLabels;
 		song_tag_handlers["TIMESIGNATURES"] = &SetSongTimeSignatures;
 		song_tag_handlers["TICKCOUNTS"] = &SetSongTickCounts;
-		//song_tag_handlers["COMBOS"] = &SetSongCombos;
-		//song_tag_handlers["SPEEDS"] = &SetSongSpeeds;
-		//song_tag_handlers["SCROLLS"] = &SetSongScrolls;
-		//song_tag_handlers["FAKES"] = &SetSongFakes;
+		song_tag_handlers["COMBOS"] = &SetSongCombos;
+		song_tag_handlers["SPEEDS"] = &SetSongSpeeds;
+		song_tag_handlers["SCROLLS"] = &SetSongScrolls;
+		song_tag_handlers["FAKES"] = &SetSongFakes;
 		/* The following are cache tags. Never fill their values
 		 * directly: only from the cached version. */
-		//song_tag_handlers["FIRSTSECOND"] = &SetFirstSecond;
-		//song_tag_handlers["LASTSECOND"] = &SetLastSecond;
-		//song_tag_handlers["SONGFILENAME"] = &SetSongFilename;
-		//song_tag_handlers["HASMUSIC"] = &SetHasMusic;
-		//song_tag_handlers["HASBANNER"] = &SetHasBanner;
+		song_tag_handlers["FIRSTSECOND"] = &SetFirstSecond;
+		song_tag_handlers["LASTSECOND"] = &SetLastSecond;
+		song_tag_handlers["SONGFILENAME"] = &SetSongFilename;
+		song_tag_handlers["HASMUSIC"] = &SetHasMusic;
+		song_tag_handlers["HASBANNER"] = &SetHasBanner;
 		/* Tags that no longer exist, listed for posterity.  May their names
 		 * never be forgotten for their service to Stepmania. -Kyz
 		 * LASTBEATHINT: // unable to parse due to tag position. Ignore.
@@ -400,13 +538,13 @@ struct ssc_parser_helper_t
 		 * LASTBEAT: // no longer used.
 		 */
 
-		//steps_tag_handlers["VERSION"] = &SetStepsVersion;
-		//steps_tag_handlers["CHARTNAME"] = &SetChartName;
-		//steps_tag_handlers["STEPSTYPE"] = &SetStepsType;
-		//steps_tag_handlers["CHARTSTYLE"] = &SetChartStyle;
-		//steps_tag_handlers["DESCRIPTION"] = &SetDescription;
-		//steps_tag_handlers["DIFFICULTY"] = &SetDifficulty;
-		//steps_tag_handlers["METER"] = &SetMeter;
+		steps_tag_handlers["VERSION"] = &SetStepsVersion;
+		steps_tag_handlers["CHARTNAME"] = &SetChartName;
+		steps_tag_handlers["STEPSTYPE"] = &SetStepsType;
+		steps_tag_handlers["CHARTSTYLE"] = &SetChartStyle;
+		steps_tag_handlers["DESCRIPTION"] = &SetDescription;
+		steps_tag_handlers["DIFFICULTY"] = &SetDifficulty;
+		steps_tag_handlers["METER"] = &SetMeter;
 		//steps_tag_handlers["RADARVALUES"] = &SetRadarValues;
 		//steps_tag_handlers["CREDIT"] = &SetCredit;
 		//steps_tag_handlers["MUSIC"] = &SetStepsMusic;
@@ -430,7 +568,7 @@ struct ssc_parser_helper_t
 		 * as the Song's timing. No other changes are required. */
 		//steps_tag_handlers["ATTACKS"] = &SetStepsAttacks;
 		//steps_tag_handlers["OFFSET"] = &SetStepsOffset;
-		//steps_tag_handlers["DISPLAYBPM"] = &SetStepsDisplayBPM;
+		steps_tag_handlers["DISPLAYBPM"] = &SetStepsDisplayBPM;
 
 		//load_note_data_handlers["VERSION"] = LNDID_version;
 		//load_note_data_handlers["STEPSTYPE"] = LNDID_stepstype;
@@ -444,6 +582,7 @@ struct ssc_parser_helper_t
 		//load_note_data_handlers["NOTEDATA"] = LNDID_notedata;
 	}
 };
+
 ssc_parser_helper_t parser_helper;
 
 void SSCLoader::ProcessBPMs(TimingData& out, const std::string sParam) {
@@ -469,6 +608,10 @@ void SSCLoader::ProcessBPMs(TimingData& out, const std::string sParam) {
 		else
 		{
 			// Invalid BPM
+			std::cout << "Song file" <<
+				this->GetSongTitle() <<
+				"has an invalid BPM at beat %f, BPM %f." <<
+				fBeat, fNewBPM;
 		}
 	}
 
@@ -559,6 +702,66 @@ void SSCLoader::ProcessLabels(TimingData& out, const std::string sParam)
 	}
 }
 
+void SSCLoader::ProcessCombos(TimingData& out, const std::string line, const int rowsPerBeat)
+{
+	std::vector<std::string> arrayComboExpressions;
+	util::split(line, ",", arrayComboExpressions);
+
+	for (unsigned f = 0; f < arrayComboExpressions.size(); f++)
+	{
+		std::vector<std::string> arrayComboValues;
+		util::split(arrayComboExpressions[f], "=", arrayComboValues);
+		unsigned size = arrayComboValues.size();
+		if (size < 2)
+		{
+			std::cout << "Song file" <<
+				this->GetSongTitle()
+				<< " has an invalid #COMBOS value \"%s\" (must have at least one '='), ignored." <<
+				arrayComboExpressions[f].c_str();
+			continue;
+		}
+		const float fComboBeat = std::stof(arrayComboValues[0]);
+		const int iCombos = std::stoi(arrayComboValues[1]);
+		const int iMisses = (size == 2 ? iCombos : std::stoi(arrayComboValues[2]));
+		out.AddSegment(ComboSegment(BeatToNoteRow(fComboBeat), iCombos, iMisses));
+	}
+}
+
+void SSCLoader::ProcessScrolls(TimingData& out, const std::string sParam)
+{
+	std::vector<std::string> vs1;
+	util::split(sParam, ",", vs1);
+
+	for (std::string const& s1 : vs1)
+	{
+		std::vector<std::string> vs2;
+		util::split(s1, "=", vs2);
+
+		if (vs2.size() < 2)
+		{
+			std::cout << "Song file" <<
+				this->GetSongTitle() <<
+				"has an scroll change with %i values." <<
+				static_cast<int>(vs2.size());
+			continue;
+		}
+
+		const float fBeat = std::stof(vs2[0]);
+		const float fRatio = std::stof(vs2[1]);
+
+		if (fBeat < 0)
+		{
+			std::cout << "Song file" <<
+				this->GetSongTitle() <<
+				"has an scroll change with beat %f." <<
+				fBeat;
+			continue;
+		}
+
+		out.AddSegment(ScrollSegment(BeatToNoteRow(fBeat), fRatio));
+	}
+}
+
 bool SSCLoader::LoadFromSimfile(const std::string& sPath, Song& out) {
 	MsdFile msd;
 	if (!msd.ReadFile(sPath, true))
@@ -601,7 +804,7 @@ bool SSCLoader::LoadFromSimfile(const std::string& sPath, Song& out) {
 			if (valueName == "NOTEDATA")
 			{
 				state = GETTING_STEP_INFO;
-				Steps* new_notes = out.CreateSteps();
+				pNewNotes = out.CreateSteps();
 				stepsTiming = TimingData(out.timing_data_.beat0OffsetInSeconds_);
 				step_tag.has_own_timing = false;
 				step_tag.steps = pNewNotes;
@@ -631,10 +834,10 @@ bool SSCLoader::LoadFromSimfile(const std::string& sPath, Song& out) {
 					pNewNotes->timing_data_ = stepsTiming;
 				}
 				step_tag.has_own_timing = false;
-				pNewNotes->SetSMNoteData(sParams[1]);
-				//pNewNotes->TidyUpData();
-				//pNewNotes->SetFilename(sPath);
-				//out.AddSteps(pNewNotes);
+				pNewNotes->SetSMNoteData(params[1]);
+				pNewNotes->TidyUpData();
+				pNewNotes->SetFilename(sPath);
+				out.AddSteps(pNewNotes);
 			}
 			else if (valueName == "STEPFILENAME")
 			{
@@ -644,7 +847,7 @@ bool SSCLoader::LoadFromSimfile(const std::string& sPath, Song& out) {
 					pNewNotes->timing_data_ = stepsTiming;
 				}
 				step_tag.has_own_timing = false;
-				//pNewNotes->SetFilename(sParams[1]);
+				pNewNotes->SetFilename(params[1]);
 				//out.AddSteps(pNewNotes);
 			}
 			break;
@@ -662,7 +865,7 @@ bool SSCLoader::LoadFromSimfile(const std::string& sPath, Song& out) {
 			steps_type = matcher;
 		}
 		if (valueName == "NOTES") {
-			out.AddSteps(matcher, difficulty, steps_type);
+			//out.AddSteps(matcher, difficulty, steps_type);
 		}
 		if (valueName == "BPMS") {
 			out.SetBpms(matcher);
