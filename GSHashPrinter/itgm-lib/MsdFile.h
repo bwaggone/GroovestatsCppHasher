@@ -56,7 +56,7 @@ public:
 	/**
 	 * @brief Retrieve the number of values for each tag.
 	 * @return the nmber of values. */
-	unsigned GetNumValues() const { return values.size(); }
+	unsigned GetNumValues() const { return static_cast<unsigned>(values.size()); }
 	/**
 	 * @brief Get the number of parameters for the current index.
 	 * @param val the current value index.

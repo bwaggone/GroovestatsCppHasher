@@ -5,8 +5,8 @@
 std::vector<float> TimeSignatureSegment::GetValues() const
 {
 	std::vector<float> ret;
-	ret.push_back(GetNum());
-	ret.push_back(GetDen());
+	ret.push_back(static_cast<float>(GetNum()));
+	ret.push_back(static_cast<float>(GetDen()));
 	return ret;
 }
 

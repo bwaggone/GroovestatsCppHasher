@@ -11,7 +11,7 @@ using namespace std::filesystem;
 
 void GetGrooveStatsHashes(Song& song)
 {
-	for (Steps& step : song.GetSteps()) {
+	for (Steps* step : song.GetSteps()) {
 		//std::cout << song.GetPath() << "\nStyle: " << step.GetStepsType() << "\tDifficulty: " << step.GetDifficulty() << "\tHash : " << step.GetGSHash() << "\n";
 	}
 }

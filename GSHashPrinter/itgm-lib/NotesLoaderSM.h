@@ -61,11 +61,12 @@ public:
 	void ProcessAttackString(std::vector<std::string>& attacks, MsdFile::value_t params);
 	void ProcessAttacks(AttackArray& attacks, MsdFile::value_t params);
 	void ProcessDelays(TimingData& out, std::string line, int rowsPerBeat = -1);
-	void SMLoader::ProcessTimeSignatures(TimingData& out, const std::string line, const int rowsPerBeat = -1);
+	void ProcessTimeSignatures(TimingData& out, const std::string line, const int rowsPerBeat = -1);
 	void ProcessTickcounts(TimingData& out, const std::string line, const int rowsPerBeat = -1);
 	virtual void ProcessSpeeds(TimingData& out, const std::string line, const int rowsPerBeat = -1);
 	virtual void ProcessCombos(TimingData&,const std::string line, const int rowsPerBeat = -1) {}
 	virtual void ProcessFakes(TimingData& out, const std::string line, const int rowsPerBeat = -1);
+	void TidyUpData(Song& song, bool bFromCache);
 
 private:
 	/** @brief The file extension in use. */

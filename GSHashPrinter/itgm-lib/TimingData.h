@@ -65,6 +65,11 @@ public:
 	const TimingSegment* GetSegmentAtRow(int iNoteRow, TimingSegmentType tst) const;
 	TimingSegment* GetSegmentAtRow(int iNoteRow, TimingSegmentType tst);
 	int GetSegmentIndexAtRow(TimingSegmentType tst, int iRow) const;
+	bool empty() const;
+	const std::vector<TimingSegment*>& GetTimingSegments(TimingSegmentType tst) const
+	{
+		return const_cast<TimingData*>(this)->GetTimingSegments(tst);
+	}
 
 	// GetBeatArgs, GetBeatStarts, m_beat_start_lookup, m_time_start_lookup,
 	// PrepareLookup, and ReleaseLookup form a system for speeding up finding
@@ -103,10 +108,6 @@ public:
 			last_time(0), warp_destination(0), is_warping(false) {}
 	};
 
-	const std::vector<TimingSegment*>& GetTimingSegments(TimingSegmentType tst) const
-	{
-		return const_cast<TimingData*>(this)->GetTimingSegments(tst);
-	}
 	std::vector<TimingSegment*>& GetTimingSegments(TimingSegmentType tst)
 	{
 		return m_avpTimingSegments[tst];

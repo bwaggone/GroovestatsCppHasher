@@ -1,13 +1,31 @@
 #include <algorithm>
 #include <regex>
 
+#include "NoteDataUtil.h"
+#include "Song.h"
 #include "Steps.h"
 #include "RageUtil.h"
+#include "TimingData.h"
 
 Steps::Steps(Song* song) : song_(song) {}
 
+void Steps::GetNoteData(NoteData& noteDataOut) const
+{
+	Decompress();
 
-std::string Steps::MinimizeChartString() {
+	if (m_bNoteDataIsFilled)
+	{
+		noteDataOut = note_data_;
+	}
+	else
+	{
+		noteDataOut.ClearAll();
+		noteDataOut.SetNumTracks(enums::kStepTypeInfos[steps_type_].iNumTracks);
+	}
+}
+
+
+std::string Steps::MinimizedChartString() {
 
 	// We can potentially minimize the chart to get the most compressed
 	// form of the actual chart data.
@@ -22,6 +40,10 @@ std::string Steps::MinimizeChartString() {
 	// 		the smallest quantization.
 
 	std::regex anyNote("[^0]");
+
+	std::string smNoteData = "";
+	NoteData noteData;
+	GetNoteData(noteData);
 
 	std::vector<std::string> measures;
 	std::string minimizedNoteData = "";
@@ -90,9 +112,112 @@ std::string Steps::MinimizeChartString() {
 	return minimizedNoteData;
 }
 
+const TimingData* Steps::GetTimingData() const
+{
+	return timing_data_.empty() ? &song_->timing_data_ : &timing_data_;
+}
 
+void Steps::Decompress() const
+{
+	const_cast<Steps*>(this)->Decompress();
+}
+
+void Steps::GetSMNoteData(std::string& notes_comp_out) const
+{
+	if (m_sNoteDataCompressed.empty())
+	{
+		if (!m_bNoteDataIsFilled)
+		{
+			/* no data is no data */
+			notes_comp_out = "";
+			return;
+		}
+
+		NoteDataUtil::GetSMNoteDataString(note_data_, m_sNoteDataCompressed);
+	}
+
+	notes_comp_out = m_sNoteDataCompressed;
+}
+
+void Steps::Decompress()
+{
+	if (m_bNoteDataIsFilled)
+		return;	// already decompressed
+
+	if (!filename_.empty() && m_sNoteDataCompressed.empty())
+	{
+		// TODO(bwaggone): This, even though it seems to be useless? Double check when notedata compressed is actually written to be sure.
+		// We have NoteData on disk and not in memory. Load it.
+		/*if (!this->GetNoteDataFromSimfile())
+		{
+			std::cout << "Couldn't load the " << enums::kDifficultyToString[difficulty_] << "chart's NoteData from " << filename_;
+			return;
+		}*/
+
+		GetSMNoteData(m_sNoteDataCompressed);
+	}
+
+	if (m_sNoteDataCompressed.empty())
+	{
+		/* there is no data, do nothing */
+	}
+	else
+	{
+		// load from compressed
+		bool bComposite = enums::kStepTypeInfos[steps_type_].m_StepsTypeCategory == enums::StepsTypeCategory_Routine;
+		m_bNoteDataIsFilled = true;
+		note_data_.SetNumTracks(enums::kStepTypeInfos[steps_type_].iNumTracks);
+
+		// TODO(bwaggone): This
+		//NoteDataUtil::LoadFromSMNoteDataString(*m_pNoteData, m_sNoteDataCompressed, bComposite);
+	}
+}
+
+// ACTUAL ITGM VERSION:
+void Steps::CalculateGrooveStatsHash()
+{
+	// When the game first boots up, it will load the GrooveStatsHash from the
+	// cache.
+	// This should keep the initial boot snappy, especially since hashes should
+	// almost never change.
+	// If this function is then called again (say in ScreenEval), we can
+	// recalculate the hash and use that for submission.
+
+	// No caching in this script.
+	/*if (m_iGrooveStatsHashVersion == CURRENT_GROOVE_STATS_HASH_VERSION &&
+		m_bIsCachedGrooveStatsHashJustLoaded == true)
+	{
+		m_bIsCachedGrooveStatsHashJustLoaded = false;
+		return;
+	}*/
+	this->Decompress();
+
+	std::string smNoteData = this->MinimizedChartString();
+
+	TimingData* timingData = this->GetTimingData();
+	std::vector<TimingSegment*> segments = timingData->GetTimingSegments(SEGMENT_BPM);
+	std::vector<std::string> bpmStrings;
+	bpmStrings.reserve(segments.size());
+	for (TimingSegment* segment : segments)
+	{
+		BPMSegment* bpmSegment = ToBPM(segment);
+		float beat = bpmSegment->GetBeat();
+		float bpm = bpmSegment->GetBPM();
+		std::string segmentStr = util::NormalizeDecimal(beat) + "=" + util::NormalizeDecimal(bpm);
+		bpmStrings.push_back(segmentStr);
+	}
+	std::string bpmString = util::join(",", bpmStrings);
+
+	smNoteData.append(bpmString);
+	std::string gsKey = util::BinaryToHex(util::GetSHA1ForString(smNoteData));
+	gsKey = gsKey.substr(0, 16);
+	groovestats_hash_ = gsKey;
+	//groovestats_version_ = CURRENT_GROOVE_STATS_HASH_VERSION;
+}
+
+// NOT FAITHFUL VERSION:
 void Steps::CalculateAndSetGSHash(std::string bpm_string) {
-	std::string chart_and_bpms = MinimizeChartString() + bpm_string;
+	std::string chart_and_bpms = MinimizedChartString() + bpm_string;
 	SetGSHash(util::BinaryToHex(util::GetSHA1ForString(chart_and_bpms)).substr(0, 16));
 }
 
@@ -115,29 +240,10 @@ void Steps::SetStepsType(std::string steps_type) {
 }
 
 void Steps::DeAutogen(bool copy_note_data) {
-	// TODO (bwaggone): This.
-	/*if (!parent)
-		return; // OK
-
-	if (bCopyNoteData)
-		Decompress();	// fills in m_pNoteData with sliding window transform
-
-	m_sDescription = Real()->m_sDescription;
-	m_sChartStyle = Real()->m_sChartStyle;
-	m_Difficulty = Real()->m_Difficulty;
-	m_iMeter = Real()->m_iMeter;
-	std::copy(Real()->m_CachedRadarValues, Real()->m_CachedRadarValues + NUM_PLAYERS, m_CachedRadarValues);
-	std::copy(Real()->m_CachedTechCounts, Real()->m_CachedTechCounts + NUM_PLAYERS, m_CachedTechCounts);
-
-	m_CachedNpsPerMeasure.assign(Real()->m_CachedNpsPerMeasure.begin(), Real()->m_CachedNpsPerMeasure.end());
-	m_CachedNotesPerMeasure.assign(Real()->m_CachedNotesPerMeasure.begin(), Real()->m_CachedNotesPerMeasure.end());
-
-
-	m_sCredit = Real()->m_sCredit;
-	parent = nullptr;
-
-	if (bCopyNoteData)
-		Compress();*/
+	// Autogenerated notes are used in engine for the HowToPlay screen.
+	// Since this code isn't ever intended to auto generate anything, just treat
+	// it as false and move on.
+	return;
 }
 
 void Steps::SetChartStyle(std::string chart_style) {
@@ -170,7 +276,36 @@ void Steps::SetMeter(int meter) {
 	meter_ = meter;
 }
 
-// bwaggone TODO: this
+float Steps::PredictMeter() const
+{
+	// TODO(bwaggone): Maybe add Radar support.
+	/*float pMeter = 0.775f;
+
+	const float RadarCoeffs[NUM_RadarCategory] =
+	{
+		10.1f, 5.27f,-0.905f, -1.10f, 2.86f,
+		0,0,0,0,0,0,0,0
+	};
+	const RadarValues& rv = GetRadarValues(PLAYER_1);
+	for (int r = 0; r < NUM_RadarCategory; ++r)
+		pMeter += rv[r] * RadarCoeffs[r];
+
+	const float DifficultyCoeffs[enums::NUM_Difficulty] =
+	{
+		-0.877f, -0.877f, 0, 0.722f, 0.722f, 0
+	};
+	pMeter += DifficultyCoeffs[GetDifficulty()];
+
+	// Init non-radar values
+	const float SV = rv[RadarCategory_Stream] * rv[RadarCategory_Voltage];
+	const float ChaosSquare = rv[RadarCategory_Chaos] * rv[RadarCategory_Chaos];
+	pMeter += -6.35f * SV;
+	pMeter += -2.58f * ChaosSquare;
+	if (pMeter < 1) pMeter = 1;
+	return pMeter;*/
+	return 0.00;
+}
+
 void Steps::TidyUpData()
 {
 	// Don't set the StepsType to dance single if it's invalid.  That just
@@ -179,26 +314,27 @@ void Steps::TidyUpData()
 	// is a forwards compatibility feature, so that if a future version adds a
 	// new style, editing a simfile with unrecognized Steps won't silently
 	// delete them. -Kyz
-	/*if (steps_type_enum_ == StepsType_Invalid)
+	if (steps_type_ == enums::StepsType_Invalid)
 	{
-		//LOG->Warn("Detected steps with unknown style '%s' in '%s'", m_StepsTypeStr.c_str(), m_pSong->m_sSongFileName.c_str());
+		std::cout << "Detected steps with unknown style " << steps_type_str_ << "in" << song_->filename;
 	}
-	else if (steps_type_ == "")
+	else if (steps_type_str_ == "")
 	{
-		//steps_type_ = GAMEMAN->GetStepsTypeInfo(m_StepsType).szName;
+		steps_type_str_ = enums::kStepsTypeToString[steps_type_];
 	}
 
-	if (GetDifficulty() == Difficulty_Invalid)
-		SetDifficulty(StringToDifficulty(GetDescription()));
+	if (GetDifficulty() == enums::Difficulty_Invalid) {
+		SetDifficulty(enums::kStringToDifficulty[GetDescription()]);
+	}
 
-	if (GetDifficulty() == Difficulty_Invalid)
+	if (GetDifficulty() == enums::Difficulty_Invalid)
 	{
-		if (GetMeter() == 1)	SetDifficulty(Difficulty_Beginner);
-		else if (GetMeter() <= 3)	SetDifficulty(Difficulty_Easy);
-		else if (GetMeter() <= 6)	SetDifficulty(Difficulty_Medium);
-		else				SetDifficulty(Difficulty_Hard);
+		if (GetMeter() == 1)	SetDifficulty(enums::Difficulty_Beginner);
+		else if (GetMeter() <= 3)	SetDifficulty(enums::Difficulty_Easy);
+		else if (GetMeter() <= 6)	SetDifficulty(enums::Difficulty_Medium);
+		else				SetDifficulty(enums::Difficulty_Hard);
 	}
 
 	if (GetMeter() < 1) // meter is invalid
-		SetMeter(int(PredictMeter()));*/
+		SetMeter(int(PredictMeter()));
 }

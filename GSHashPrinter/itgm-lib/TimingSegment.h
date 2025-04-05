@@ -39,6 +39,9 @@ const int ROW_INVALID = -1;
 #define COMPARE(x) if( this->x!=other.x ) return false
 #define COMPARE_FLOAT(x) if( std::abs(this->x - other.x) > EPSILON ) return false
 
+#define FOREACH_ENUM( e, var )	for( e var=(e)0; var<NUM_##e; enum_add<e>( var, +1 ) )
+#define FOREACH_TimingSegmentType(tst) FOREACH_ENUM(TimingSegmentType, tst)
+
 struct TimingSegment {
 	virtual TimingSegmentType GetType() const { return TimingSegmentType_Invalid; }
 	virtual SegmentEffectType GetEffectType() const { return SegmentEffectType_Invalid; }
@@ -125,7 +128,6 @@ struct FakeSegment : public TimingSegment
 	TimingSegment* Copy() const { return new FakeSegment(*this); }
 
 	bool IsNotable() const { return m_iLengthRows > 0; }
-	void DebugPrint() const;
 
 	FakeSegment() : TimingSegment(), m_iLengthRows(-1) { }
 

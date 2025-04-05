@@ -791,14 +791,16 @@ bool SSCLoader::LoadFromSimfile(const std::string& sPath, Song& out) {
 		case GETTING_SONG_INFO:
 		{
 			song_tag.params = &params;
-			// TODO: Generic tags function and map
 			song_handler_map_t::iterator handler =
 				parser_helper.song_tag_handlers.find(valueName);
 			if (handler != parser_helper.song_tag_handlers.end())
 			{
 				handler->second(song_tag);
 			}
-			// WriteGlobalTags(params, out);
+			//else if (sValueName.Left(strlen("BGCHANGES")) == "BGCHANGES")
+			//{
+			//	SetBGChanges(reused_song_info);
+			//}
 
 			// This tag will get us to the next section.
 			if (valueName == "NOTEDATA")
@@ -848,31 +850,21 @@ bool SSCLoader::LoadFromSimfile(const std::string& sPath, Song& out) {
 				}
 				step_tag.has_own_timing = false;
 				pNewNotes->SetFilename(params[1]);
-				//out.AddSteps(pNewNotes);
+				out.AddSteps(pNewNotes);
+			}
+			else
+			{
+				// Silently ignore unrecognized tags, as was done before. -Kyz
 			}
 			break;
 		}
 		}
-
-		// At this point, ITGm usually calls particular parsing functions
-		// for each value. Skip that and only record what we care about for
-		// GSHash calculation.
-		if (valueName == "DIFFICULTY") {
-			// Stateful.
-			difficulty = matcher;
-		}
-		if (valueName == "STEPSTYPE") {
-			steps_type = matcher;
-		}
-		if (valueName == "NOTES") {
-			//out.AddSteps(matcher, difficulty, steps_type);
-		}
-		if (valueName == "BPMS") {
-			out.SetBpms(matcher);
-		}
 	}
 
-	// After iteration, calculate the hashes based on what we found.
+	out.version = kStepFileVersionNumber;
+	TidyUpData(out, false);
+
+	// This part is not done in the original ITGm implementation.
 	out.SetGSHashes();
 
 	return false;

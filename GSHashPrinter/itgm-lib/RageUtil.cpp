@@ -1,5 +1,6 @@
 // This is a file that contains a bunch of utilities specific to ITGm.
 // IMO lots of these should be replaced with standard library functions, but that's a chore for another day
+#include <iomanip>
 #include <string>
 #include <sstream>
 #include <tomcrypt.h>
@@ -167,6 +168,15 @@ namespace util {
 		/* Delete from n to the end. If n == sStr.size(), nothing is deleted;
 		 * if n == 0, the whole string is erased. */
 		sStr.erase(sStr.begin() + n, sStr.end());
+	}
+
+	std::string NormalizeDecimal(float num)
+	{
+		float mult = 1000.0f;
+		float rounded = std::round(num * mult) / mult;
+		std::ostringstream os;
+		os << std::fixed << std::setprecision(3) << rounded;
+		return os.str();
 	}
 
 }

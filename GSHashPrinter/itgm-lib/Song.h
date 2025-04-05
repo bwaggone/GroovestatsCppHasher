@@ -53,7 +53,7 @@ public:
 	//void AddSteps(const std::string& in, std::string diff, std::string steps_type) {
 	//	steps_.push_back(Steps(in, diff, steps_type));
 	//}
-	std::vector<Steps> GetSteps() { return steps_; }
+	std::vector<Steps*> GetSteps() { return steps_; }
 	std::string GetBpms() { return bpms_; }
 	std::string GetPath() { return song_path_; }
 	void Song::SetBpms(const std::string& in);
@@ -112,13 +112,13 @@ private:
 	float min_bpm_;
 	float max_bpm_;
 	float specified_last_second;
-	std::vector<Steps*> m_vpSteps;
+	std::vector<Steps*> steps_;
 	//std::vector<BackgroundChange>*	m_BackgroundChanges[NUM_BackgroundLayer];
 
 
 	// Not faithful to ITGm
 	std::string song_path_;
-	std::vector<Steps> steps_;
+	//std::vector<Steps> steps_;
 	std::string bpms_;
 };
 

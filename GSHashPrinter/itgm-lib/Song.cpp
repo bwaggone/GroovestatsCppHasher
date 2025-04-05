@@ -40,7 +40,7 @@ void Song::AddSteps(Steps* steps)
 	// won't delete those steps. -Kyz
 	if (steps->GetStepsTypeEnum() != enums::StepsType_Invalid)
 	{
-		m_vpSteps.push_back(steps);
+		steps_.push_back(steps);
 		//ASSERT_M(pSteps->m_StepsType < NUM_StepsType, ssprintf("%i", pSteps->m_StepsType));
 		//m_vpStepsByType[pSteps->m_StepsType].push_back(pSteps);
 	}
@@ -52,8 +52,9 @@ void Song::AddSteps(Steps* steps)
 
 
 void Song::SetGSHashes() {
-	for (Steps& step : steps_) {
-		step.CalculateAndSetGSHash(bpms_);
+	for (Steps* step : steps_) {
+		step->CalculateGrooveStatsHash();
+		//step.CalculateAndSetGSHash(bpms_);
 	}
 }
 

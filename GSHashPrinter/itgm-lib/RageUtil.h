@@ -78,6 +78,9 @@ namespace util {
 	float HHMMSSToSeconds(const std::string& sHHMMSS);
 
 	void TrimRight(std::string& sStr, const char* szTrim = "\r\n\t ");
+
+	std::string NormalizeDecimal(float num);
+
 }
 
 #endif

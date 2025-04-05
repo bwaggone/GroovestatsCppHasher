@@ -36,6 +36,15 @@ void TimingData::Copy(const TimingData& cpy)
 	}*/
 }
 
+bool TimingData::empty() const
+{
+	FOREACH_TimingSegmentType(tst)
+		if (!GetTimingSegments(tst).empty())
+			return false;
+
+	return true;
+}
+
 TimingData::~TimingData()
 {
 	Clear();

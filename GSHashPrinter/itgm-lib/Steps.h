@@ -28,6 +28,13 @@ public:
 	enums::Difficulty GetDifficulty() { return difficulty_; }
 	std::string GetDescription() { return description_; }
 	void SetMeter(int meter);
+	void CalculateGrooveStatsHash();
+	int GetMeter() const { return meter_; }
+	float Steps::PredictMeter() const;
+	void Steps::Decompress();
+	void Steps::Decompress() const;
+	void GetNoteData(NoteData& noteDataOut) const;
+	void GetSMNoteData(std::string& notes_comp_out) const;
 
 	// Not faithful to ITGm
 	//Steps(std::string raw_chart, std::string difficulty, std::string steps_type) : raw_chart_(raw_chart), difficulty_(difficulty), steps_type_(steps_type) {};
@@ -38,12 +45,14 @@ public:
 	void CalculateAndSetGSHash(std::string bpm_string);
 
 	// Minimizes the chart string into part of the hash that's used for GrooveStats.
-	std::string MinimizeChartString();
+	std::string MinimizedChartString();
 	void SetSMNoteData(const std::string& notes_comp_);
 	void TidyUpData();
 	void SetFilename(std::string in) { filename_ = in; }
 	enums::StepsType GetStepsTypeEnum() { return steps_type_enum_; }
 
+	const TimingData* GetTimingData() const;
+	TimingData* GetTimingData() { return const_cast<TimingData*>(static_cast<const Steps*>(this)->GetTimingData()); };
 	NoteData note_data_;
 	TimingData timing_data_;
 
@@ -65,6 +74,7 @@ private:
 	enums::Difficulty difficulty_;
 	std::string description_;
 	int meter_;
+	std::string groovestats_hash_;
 
 	// TODO: Attacks
 	// std::vector<std::string> attack_string_;
