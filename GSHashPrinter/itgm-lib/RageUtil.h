@@ -56,6 +56,12 @@ static inline void enum_add(T& val, int iAmt)
 	val = static_cast<T>(val + iAmt);
 }
 
+
+template<class T>
+inline T Increment(T a) { ++a; return a; }
+template<class T>
+inline T Decrement(T a) { --a; return a; }
+
 namespace util {
 
 	void Trim(std::string& sStr, const char* s = "\r\n\t ");
@@ -67,6 +73,7 @@ namespace util {
 	template <class S, class C>
 	void do_split(const S& Source, const C Delimitor, std::vector<S>& AddIt, const bool bIgnoreEmpty);
 
+	void split(const std::string& Source, const std::string& Delimitor, int& begin, int& size, int len, const bool bIgnoreEmpty);
 	void split(const std::string& sSource, const std::string& sDelimitor, std::vector<std::string>& asAddIt, const bool bIgnoreEmpty = true);
 
 	std::string BinaryToHex(const void* pData_, std::size_t iNumBytes);
@@ -82,5 +89,8 @@ namespace util {
 	std::string NormalizeDecimal(float num);
 
 }
+
+
+#define FOREACH_ENUM( e, var )	for( e var=(e)0; var<NUM_##e; enum_add<e>( var, +1 ) )
 
 #endif

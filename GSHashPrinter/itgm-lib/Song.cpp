@@ -38,7 +38,7 @@ void Song::AddSteps(Steps* steps)
 	// Songs of unknown stepstype are saved as a forwards compatibility feature
 	// so that editing a simfile made by a future version that has a new style
 	// won't delete those steps. -Kyz
-	if (steps->GetStepsTypeEnum() != enums::StepsType_Invalid)
+	if (steps->GetStepsTypeEnum() != StepsType_Invalid)
 	{
 		steps_.push_back(steps);
 		//ASSERT_M(pSteps->m_StepsType < NUM_StepsType, ssprintf("%i", pSteps->m_StepsType));
@@ -54,7 +54,6 @@ void Song::AddSteps(Steps* steps)
 void Song::SetGSHashes() {
 	for (Steps* step : steps_) {
 		step->CalculateGrooveStatsHash();
-		//step.CalculateAndSetGSHash(bpms_);
 	}
 }
 

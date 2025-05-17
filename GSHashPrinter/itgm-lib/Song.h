@@ -41,7 +41,7 @@ public:
 	Steps* CreateSteps();
 	void InitSteps(Steps* steps);
 
-	void SetDisplayBPM(enums::DisplayBPM in) { display_bpm_ = in; }
+	void SetDisplayBPM(DisplayBPM in) { display_bpm_ = in; }
 	void SetMinBPM(float in) { min_bpm_ = in; }
 	void SetMaxBPM(float in) { max_bpm_ = in; }
 
@@ -107,18 +107,14 @@ public:
 
 
 private:
-	// Closer to ITGm
-	enums::DisplayBPM display_bpm_;
+	DisplayBPM display_bpm_;
 	float min_bpm_;
 	float max_bpm_;
 	float specified_last_second;
 	std::vector<Steps*> steps_;
 	//std::vector<BackgroundChange>*	m_BackgroundChanges[NUM_BackgroundLayer];
 
-
-	// Not faithful to ITGm
 	std::string song_path_;
-	//std::vector<Steps> steps_;
 	std::string bpms_;
 };
 

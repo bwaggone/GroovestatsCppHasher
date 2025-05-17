@@ -20,7 +20,7 @@ void Steps::GetNoteData(NoteData& noteDataOut) const
 	else
 	{
 		noteDataOut.ClearAll();
-		noteDataOut.SetNumTracks(enums::kStepTypeInfos[steps_type_].iNumTracks);
+		noteDataOut.SetNumTracks(kStepTypeInfos[steps_type_].iNumTracks);
 	}
 }
 
@@ -44,10 +44,22 @@ std::string Steps::MinimizedChartString() {
 	std::string smNoteData = "";
 	NoteData noteData;
 	GetNoteData(noteData);
+	NoteDataUtil::GetSMNoteDataString(noteData, smNoteData);
+
+	if (smNoteData == "")
+	{
+		return "";
+	}
+
+	// Strip any comments from smNoteData
+	std::regex commentRegex("//[^\n]*");
+	std::string deCommentedNoteData = std::regex_replace(smNoteData, commentRegex, "");
+
+	std::string minimizedNoteData = "";
 
 	std::vector<std::string> measures;
-	std::string minimizedNoteData = "";
-	util::split(raw_chart_, ",", measures, true);
+	
+	util::split(deCommentedNoteData, ",", measures, true);
 	for (unsigned m = 0; m < measures.size(); m++)
 	{
 
@@ -57,7 +69,7 @@ std::string Steps::MinimizedChartString() {
 		bool minimal = false;
 		std::vector<std::string> lines;
 		util::split(measures[m], "\n", lines, true);
-		while (!minimal && lines.size() % 2 == 0)
+		while (lines.size() > 0 && !minimal && lines.size() % 2 == 0)
 		{
 			// If every other line is all 0s, we can minimize the measure
 			for (unsigned i = 1; i < lines.size(); i += 2)
@@ -147,10 +159,11 @@ void Steps::Decompress()
 	if (!filename_.empty() && m_sNoteDataCompressed.empty())
 	{
 		// TODO(bwaggone): This, even though it seems to be useless? Double check when notedata compressed is actually written to be sure.
+		//
 		// We have NoteData on disk and not in memory. Load it.
 		/*if (!this->GetNoteDataFromSimfile())
 		{
-			std::cout << "Couldn't load the " << enums::kDifficultyToString[difficulty_] << "chart's NoteData from " << filename_;
+			std::cout << "Couldn't load the " << kDifficultyToString[difficulty_] << "chart's NoteData from " << filename_;
 			return;
 		}*/
 
@@ -164,12 +177,12 @@ void Steps::Decompress()
 	else
 	{
 		// load from compressed
-		bool bComposite = enums::kStepTypeInfos[steps_type_].m_StepsTypeCategory == enums::StepsTypeCategory_Routine;
+		bool bComposite = kStepTypeInfos[steps_type_].m_StepsTypeCategory == StepsTypeCategory_Routine;
 		m_bNoteDataIsFilled = true;
-		note_data_.SetNumTracks(enums::kStepTypeInfos[steps_type_].iNumTracks);
+		note_data_.SetNumTracks(kStepTypeInfos[steps_type_].iNumTracks);
 
 		// TODO(bwaggone): This
-		//NoteDataUtil::LoadFromSMNoteDataString(*m_pNoteData, m_sNoteDataCompressed, bComposite);
+		NoteDataUtil::LoadFromSMNoteDataString(note_data_, m_sNoteDataCompressed, bComposite);
 	}
 }
 
@@ -212,13 +225,7 @@ void Steps::CalculateGrooveStatsHash()
 	std::string gsKey = util::BinaryToHex(util::GetSHA1ForString(smNoteData));
 	gsKey = gsKey.substr(0, 16);
 	groovestats_hash_ = gsKey;
-	//groovestats_version_ = CURRENT_GROOVE_STATS_HASH_VERSION;
-}
-
-// NOT FAITHFUL VERSION:
-void Steps::CalculateAndSetGSHash(std::string bpm_string) {
-	std::string chart_and_bpms = MinimizedChartString() + bpm_string;
-	SetGSHash(util::BinaryToHex(util::GetSHA1ForString(chart_and_bpms)).substr(0, 16));
+	groovestats_version_ = 3;
 }
 
 void Steps::SetSMNoteData(const std::string& notes_comp_)
@@ -232,11 +239,11 @@ void Steps::SetStepsType(std::string steps_type) {
 	for (char& c : steps_type) {
 		c = std::tolower(c);
 	}
-	if (enums::kStringToStepsType.find(steps_type) == enums::kStringToStepsType.end()) {
-		steps_type_ = enums::StepsType_Invalid;
+	if (kStringToStepsType.find(steps_type) == kStringToStepsType.end()) {
+		steps_type_ = StepsType_Invalid;
 		return;
 	}
-	steps_type_ = enums::kStringToStepsType[steps_type];
+	steps_type_ = kStringToStepsType[steps_type];
 }
 
 void Steps::DeAutogen(bool copy_note_data) {
@@ -261,12 +268,12 @@ bool Steps::MakeValidEditDescription(std::string& preferred_description)
 	return false;
 }
 
-void Steps::SetDifficultyAndDescription(enums::Difficulty difficulty, std::string desc)
+void Steps::SetDifficultyAndDescription(Difficulty difficulty, std::string desc)
 {
 	DeAutogen();
 	difficulty_ = difficulty;
 	description_ = desc;
-	if (GetDifficulty() == enums::Difficulty_Edit)
+	if (GetDifficulty() == Difficulty_Edit)
 		MakeValidEditDescription(description_);
 }
 
@@ -290,7 +297,7 @@ float Steps::PredictMeter() const
 	for (int r = 0; r < NUM_RadarCategory; ++r)
 		pMeter += rv[r] * RadarCoeffs[r];
 
-	const float DifficultyCoeffs[enums::NUM_Difficulty] =
+	const float DifficultyCoeffs[NUM_Difficulty] =
 	{
 		-0.877f, -0.877f, 0, 0.722f, 0.722f, 0
 	};
@@ -314,25 +321,25 @@ void Steps::TidyUpData()
 	// is a forwards compatibility feature, so that if a future version adds a
 	// new style, editing a simfile with unrecognized Steps won't silently
 	// delete them. -Kyz
-	if (steps_type_ == enums::StepsType_Invalid)
+	if (steps_type_ == StepsType_Invalid)
 	{
 		std::cout << "Detected steps with unknown style " << steps_type_str_ << "in" << song_->filename;
 	}
 	else if (steps_type_str_ == "")
 	{
-		steps_type_str_ = enums::kStepsTypeToString[steps_type_];
+		steps_type_str_ = kStepsTypeToString[steps_type_];
 	}
 
-	if (GetDifficulty() == enums::Difficulty_Invalid) {
-		SetDifficulty(enums::kStringToDifficulty[GetDescription()]);
+	if (GetDifficulty() == Difficulty_Invalid) {
+		SetDifficulty(kStringToDifficulty[GetDescription()]);
 	}
 
-	if (GetDifficulty() == enums::Difficulty_Invalid)
+	if (GetDifficulty() == Difficulty_Invalid)
 	{
-		if (GetMeter() == 1)	SetDifficulty(enums::Difficulty_Beginner);
-		else if (GetMeter() <= 3)	SetDifficulty(enums::Difficulty_Easy);
-		else if (GetMeter() <= 6)	SetDifficulty(enums::Difficulty_Medium);
-		else				SetDifficulty(enums::Difficulty_Hard);
+		if (GetMeter() == 1)	SetDifficulty(Difficulty_Beginner);
+		else if (GetMeter() <= 3)	SetDifficulty(Difficulty_Easy);
+		else if (GetMeter() <= 6)	SetDifficulty(Difficulty_Medium);
+		else				SetDifficulty(Difficulty_Hard);
 	}
 
 	if (GetMeter() < 1) // meter is invalid

@@ -4,6 +4,8 @@
 #include <cmath>
 #include <string>
 
+#include "ConstantsAndTypes.h"
+
 const int ROWS_PER_BEAT = 48;
 
 /**
@@ -90,6 +92,8 @@ enum TapNoteSource
 	TapNoteSource_Invalid
 };
 
+float NoteTypeToBeat(NoteType nt);
+
 
 struct TapNote {
 	/** @brief The core note type that is about to cross the target area. */
@@ -108,6 +112,10 @@ struct TapNote {
 
 	// also used for hold_head only:
 	int		iDuration;
+
+	// Hardcoded for this script
+	PlayerNumber pn = PlayerNumber_Invalid;
+
 
 	TapNote() : type(TapNoteType_Empty), subType(TapNoteSubType_Invalid),
 		source(TapNoteSource_Original), sAttackModifiers(""),
@@ -130,7 +138,35 @@ struct TapNote {
 			type = TapNoteType_Empty;
 		}
 	}
+
+	bool operator==(const TapNote& other) const
+	{
+#define COMPARE(x)	if(x!=other.x) return false
+		COMPARE(type);
+		COMPARE(subType);
+		COMPARE(source);
+		COMPARE(sAttackModifiers);
+		COMPARE(fAttackDurationSeconds);
+		COMPARE(iKeysoundIndex);
+		COMPARE(iDuration);
+		COMPARE(pn);
+#undef COMPARE
+		return true;
+	}
 };
+
+extern TapNote TAP_EMPTY;			// '0'
+extern TapNote TAP_ORIGINAL_TAP;		// '1'
+extern TapNote TAP_ORIGINAL_HOLD_HEAD;		// '2'
+extern TapNote TAP_ORIGINAL_ROLL_HEAD;		// '4'
+extern TapNote TAP_ORIGINAL_MINE;		// 'M'
+extern TapNote TAP_ORIGINAL_LIFT;		// 'L'
+extern TapNote TAP_ORIGINAL_ATTACK;		// 'A'
+extern TapNote TAP_ORIGINAL_AUTO_KEYSOUND;	// 'K'
+extern TapNote TAP_ORIGINAL_FAKE;		// 'F'
+//extern TapNote TAP_ORIGINAL_MINE_HEAD;	// 'N' (tentative, we'll see when iDance gets ripped.)
+extern TapNote TAP_ADDITION_TAP;
+extern TapNote TAP_ADDITION_MINE;
 
 
 #endif

@@ -65,6 +65,38 @@ namespace util {
 		return sTmp;
 	}
 
+	template <class S>
+	void do_split(const S& Source, const S& Delimitor, int& begin, int& size, int len, const bool bIgnoreEmpty)
+	{
+		if (size != -1)
+		{
+			// Start points to the beginning of the last delimiter. Move it up.
+			begin += size + Delimitor.size();
+			begin = std::min(begin, len);
+		}
+
+		size = 0;
+
+		if (bIgnoreEmpty)
+		{
+			// Skip delims.
+			while (begin + Delimitor.size() < Source.size() &&
+				!Source.compare(begin, Delimitor.size(), Delimitor))
+				++begin;
+		}
+
+		/* Where's the string function to find within a substring?
+		 * C++ strings apparently are missing that ... */
+		size_t pos;
+		if (Delimitor.size() == 1)
+			pos = Source.find(Delimitor[0], begin);
+		else
+			pos = Source.find(Delimitor, begin);
+		if (pos == Source.npos || (int)pos > len)
+			pos = len;
+		size = pos - begin;
+	}
+
 	template <class S, class C>
 	void do_split(const S& Source, const C Delimitor, std::vector<S>& AddIt, const bool bIgnoreEmpty)
 	{
@@ -96,6 +128,11 @@ namespace util {
 
 			startpos = pos + DelimitorLength(Delimitor);
 		} while (startpos <= Source.size());
+	}
+
+	void split(const std::string& Source, const std::string& Delimitor, int& begin, int& size, int len, const bool bIgnoreEmpty)
+	{
+		do_split(Source, Delimitor, begin, size, len, bIgnoreEmpty);
 	}
 
 	void split(const std::string& sSource, const std::string& sDelimitor, std::vector<std::string>& asAddIt, const bool bIgnoreEmpty) {

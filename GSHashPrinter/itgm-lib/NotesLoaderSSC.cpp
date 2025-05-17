@@ -333,11 +333,11 @@ void SetDifficulty(StepsTagInfo& info)
 		c = std::tolower(c);
 	}
 
-	if (enums::kStringToDifficulty.find(diff) == enums::kStringToDifficulty.end()) {
-		info.steps->SetDifficulty(enums::Difficulty_Invalid);
+	if (kStringToDifficulty.find(diff) == kStringToDifficulty.end()) {
+		info.steps->SetDifficulty(Difficulty_Invalid);
 		return;
 	}
-	info.steps->SetDifficulty(enums::kStringToDifficulty[diff]);
+	info.steps->SetDifficulty(kStringToDifficulty[diff]);
 }
 void SetMeter(StepsTagInfo& info)
 {
@@ -421,11 +421,11 @@ void SetDisplayBPM(SongTagInfo& info)
 	// #DISPLAYBPM:[xxx][xxx:xxx]|[*];
 	if ((*info.params)[1] == "*")
 	{
-		info.song->SetDisplayBPM(enums::DISPLAY_BPM_RANDOM);
+		info.song->SetDisplayBPM(DISPLAY_BPM_RANDOM);
 	}
 	else
 	{
-		info.song->SetDisplayBPM(enums::DISPLAY_BPM_SPECIFIED);
+		info.song->SetDisplayBPM(DISPLAY_BPM_SPECIFIED);
 		info.song->SetMinBPM(std::stof((*info.params)[1]));
 		if ((*info.params)[2].empty())
 		{
@@ -443,11 +443,11 @@ void SetStepsDisplayBPM(StepsTagInfo& info)
 	// #DISPLAYBPM:[xxx][xxx:xxx]|[*];
 	if ((*info.params)[1] == "*")
 	{
-		info.steps->SetDisplayBPM(enums::DISPLAY_BPM_RANDOM);
+		info.steps->SetDisplayBPM(DISPLAY_BPM_RANDOM);
 	}
 	else if ((*info.params)[1] != "")
 	{
-		info.steps->SetDisplayBPM(enums::DISPLAY_BPM_SPECIFIED);
+		info.steps->SetDisplayBPM(DISPLAY_BPM_SPECIFIED);
 		float min = std::stof((*info.params)[1]);
 		info.steps->SetMinBPM(min);
 		if ((*info.params)[2].empty())
@@ -768,14 +768,14 @@ bool SSCLoader::LoadFromSimfile(const std::string& sPath, Song& out) {
 	{
 		return false;
 	}
-	SSCLoadingStates state = GETTING_SONG_INFO;
+
+	out.filename = sPath;
+
+	int state = GETTING_SONG_INFO;
+	const unsigned values = msd.GetNumValues();
 	Steps* pNewNotes = nullptr;
 	TimingData stepsTiming;
 
-	// Cribbed from NotesLoaderSSC, this loads in order of the file.
-	std::string difficulty = "";
-	std::string steps_type = "";
-	const unsigned values = msd.GetNumValues();
 	SongTagInfo song_tag(&*this, &out, sPath);
 	StepsTagInfo step_tag(&*this, &out, sPath);
 
@@ -783,9 +783,7 @@ bool SSCLoader::LoadFromSimfile(const std::string& sPath, Song& out) {
 	{
 		const MsdFile::value_t& params = msd.GetValue(i);
 		std::string valueName = params[0];
-		std::string matcher = params[1];
 		std::transform(valueName.begin(), valueName.end(), valueName.begin(), ::toupper);
-		util::Trim(matcher);
 
 		switch (state) {
 		case GETTING_SONG_INFO:
@@ -797,6 +795,7 @@ bool SSCLoader::LoadFromSimfile(const std::string& sPath, Song& out) {
 			{
 				handler->second(song_tag);
 			}
+			// TODO: BGChanges needs more work if desired
 			//else if (sValueName.Left(strlen("BGCHANGES")) == "BGCHANGES")
 			//{
 			//	SetBGChanges(reused_song_info);
@@ -864,7 +863,7 @@ bool SSCLoader::LoadFromSimfile(const std::string& sPath, Song& out) {
 	out.version = kStepFileVersionNumber;
 	TidyUpData(out, false);
 
-	// This part is not done in the original ITGm implementation.
+	// This part is not done in the original ITGm implementation, but placed here for simplicity.
 	out.SetGSHashes();
 
 	return false;
