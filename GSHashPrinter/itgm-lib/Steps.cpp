@@ -222,7 +222,7 @@ void Steps::CalculateGrooveStatsHash()
 	std::string bpmString = util::join(",", bpmStrings);
 
 	smNoteData.append(bpmString);
-	std::string gsKey = util::BinaryToHex(util::GetSHA1ForString(smNoteData));
+	std::string gsKey = util::BinaryToHex(util::GetSHA1ForString(smNoteData.c_str()));
 	gsKey = gsKey.substr(0, 16);
 	groovestats_hash_ = gsKey;
 	groovestats_version_ = 3;
