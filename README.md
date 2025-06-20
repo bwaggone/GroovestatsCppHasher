@@ -22,14 +22,17 @@ Style: dance-single     Difficulty: Edit        Hash : ce9f28e1fb3271f9
 
 The program takes one argument, which is the path to the Songs directory. It
 only works on SSC and SM files. It expects a strict directory structure,
-(potentially TODO to make it less restrictive)
+(TODO to make it less restrictive)
 
 The program is intended to load song data as closely to ITGm as possible,
 though exceptions to its processes are documented.
 
-For a quick list of differences:
-  * Skipping the RageFile library entirely
-  * Massively simplified SSC and SM loading, not using a separate class.
-  * No NoteData, TimingSegment, or other "low level" song based data structures.
-  * Massively simplified Steps and Song classes.
+For a quick list of major differences:
   * s/RString/std::string
+  * Due to this, ssprintf and other custom functions are reworked using standard library functions
+  * Some extra parts of the song not used in hashing are not fully replicated (attacks, BGchanges) 
+
+TODO:
+   * Double check SM files are correct, confidence in SSC replication is much higher
+   * Upload a binary for anyone to run this tool
+   * Make the arguments to pass in much more lax on directory structure.
