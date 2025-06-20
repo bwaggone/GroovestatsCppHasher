@@ -1,4 +1,5 @@
 #include "NotesLoader.h"
+#include "NotesLoaderSSC.h"
 #include "MsdFile.h"
 #include "RageUtil.h"
 
@@ -24,44 +25,6 @@ void NotesLoader::GetMainAndSubTitlesFromFullTitle( const std::string &sFullTitl
 	}
 	sMainTitleOut = sFullTitle;
 	sSubTitleOut = "";
-}
-
-bool NotesLoader::LoadFromSSC(MsdFile& in, Song& out) {
-	const unsigned values = in.GetNumValues();
-
-	// Cribbed from NotesLoaderSSC, this loads in order of the file.
-	std::string difficulty = "";
-	std::string steps_type = "";
-	for (unsigned i = 0; i < values; i++)
-	{
-		const MsdFile::value_t& params = in.GetValue(i);
-		std::string valueName = params[0];
-		std::string matcher = params[1];
-		std::transform(valueName.begin(), valueName.end(), valueName.begin(), ::toupper);
-		util::Trim(matcher);
-
-		// At this point, ITGm usually calls particular parsing functions
-		// for each value. Skip that and only record what we care about for
-		// GSHash calculation.
-		if (valueName == "DIFFICULTY") {
-			// Stateful.
-			difficulty = matcher;
-		}
-		if (valueName == "STEPSTYPE") {
-			steps_type = matcher;
-		}
-		if (valueName == "NOTES") {
-			out.AddSteps(matcher, difficulty, steps_type);
-		}
-		if (valueName == "BPMS") {
-			out.SetBpms(matcher);
-		}
-	}
-
-	// After iteration, calculate the hashes based on what we found.
-	out.SetGSHashes();
-
-	return false;
 }
 
 // bwaggone note: The original NotesLoaderSM has some hacks to preserve legacy
@@ -97,7 +60,7 @@ bool NotesLoader::LoadFromSM(MsdFile& in, Song& out) {
 			util::Trim(steps_type);
 			util::Trim(difficulty);
 			util::Trim(note_data);
-			out.AddSteps(note_data, difficulty, steps_type);
+			//out.AddSteps(note_data, difficulty, steps_type);
 		}
 		if (valueName == "BPMS") {
 			out.SetBpms(matcher);
@@ -110,7 +73,7 @@ bool NotesLoader::LoadFromSM(MsdFile& in, Song& out) {
 	return false;
 }
 
-bool NotesLoader::LoadFromDir( const std::string &sPath, Song &out)
+bool NotesLoader::LoadFromDir(const std::string &sPath, Song &out)
 {
 	// bwaggone note: This function has been greatly simplified, it usually grabs an appropriate loader,
 	// and parses everything into rage data structures. Instead, just do the chart loading
@@ -122,7 +85,8 @@ bool NotesLoader::LoadFromDir( const std::string &sPath, Song &out)
 	}
 	// TODO: Check if sm or scc file, and change loading appropriately.
 	if (sPath.find(".ssc") != std::string::npos) {
-		LoadFromSSC(msd, out);
+		SSCLoader loader;
+		loader.LoadFromSimfile(sPath, out);
 	}
 	else if (sPath.find(".sm") != std::string::npos) {
 		LoadFromSM(msd, out);

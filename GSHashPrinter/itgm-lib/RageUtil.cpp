@@ -1,9 +1,12 @@
 // This is a file that contains a bunch of utilities specific to ITGm.
 // IMO lots of these should be replaced with standard library functions, but that's a chore for another day
+#include <iomanip>
 #include <string>
 #include <sstream>
 #include <tomcrypt.h>
 #include <vector>
+
+#include <algorithm>
 
 #include "RageUtil.h"
 
@@ -62,6 +65,38 @@ namespace util {
 		return sTmp;
 	}
 
+	template <class S>
+	void do_split(const S& Source, const S& Delimitor, int& begin, int& size, int len, const bool bIgnoreEmpty)
+	{
+		if (size != -1)
+		{
+			// Start points to the beginning of the last delimiter. Move it up.
+			begin += size + Delimitor.size();
+			begin = std::min(begin, len);
+		}
+
+		size = 0;
+
+		if (bIgnoreEmpty)
+		{
+			// Skip delims.
+			while (begin + Delimitor.size() < Source.size() &&
+				!Source.compare(begin, Delimitor.size(), Delimitor))
+				++begin;
+		}
+
+		/* Where's the string function to find within a substring?
+		 * C++ strings apparently are missing that ... */
+		size_t pos;
+		if (Delimitor.size() == 1)
+			pos = Source.find(Delimitor[0], begin);
+		else
+			pos = Source.find(Delimitor, begin);
+		if (pos == Source.npos || (int)pos > len)
+			pos = len;
+		size = pos - begin;
+	}
+
 	template <class S, class C>
 	void do_split(const S& Source, const C Delimitor, std::vector<S>& AddIt, const bool bIgnoreEmpty)
 	{
@@ -95,6 +130,11 @@ namespace util {
 		} while (startpos <= Source.size());
 	}
 
+	void split(const std::string& Source, const std::string& Delimitor, int& begin, int& size, int len, const bool bIgnoreEmpty)
+	{
+		do_split(Source, Delimitor, begin, size, len, bIgnoreEmpty);
+	}
+
 	void split(const std::string& sSource, const std::string& sDelimitor, std::vector<std::string>& asAddIt, const bool bIgnoreEmpty) {
 		if (sDelimitor.size() == 1)
 			do_split(sSource, sDelimitor[0], asAddIt, bIgnoreEmpty);
@@ -111,7 +151,7 @@ namespace util {
 		for (std::size_t i = 0; i < iNumBytes; i++)
 		{
 			unsigned val = pData[i];
-			stream << std::hex << val;
+			stream << std::setfill('0') << std::setw(2) << std::hex << val;
 		}
 		std::string result(stream.str());
 		return result;
@@ -133,6 +173,47 @@ namespace util {
 		hash_descriptor[iHash].done(&hash, digest);
 
 		return std::string((const char*)digest, sizeof(digest));
+	}
+
+	float HHMMSSToSeconds(const std::string &sHHMMSS)
+	{
+		std::vector<std::string> arrayBits;
+		split(sHHMMSS, ":", arrayBits, false);
+
+		while (arrayBits.size() < 3)
+			arrayBits.insert(arrayBits.begin(), "0");	// pad missing bits
+
+		float fSeconds = 0;
+		fSeconds += std::stoi(arrayBits[0]) * 60 * 60;
+		fSeconds += std::stoi(arrayBits[1]) * 60;
+		fSeconds += std::stof(arrayBits[2]);
+
+		return fSeconds;
+	}
+
+	std::string upper(std::string in) {
+		std::transform(in.begin(), in.end(), in.begin(), ::toupper);
+		return in;
+	}
+
+	void TrimRight(std::string& sStr, const char* s)
+	{
+		int n = sStr.size();
+		while (n > 0 && strchr(s, sStr[n - 1]))
+			n--;
+
+		/* Delete from n to the end. If n == sStr.size(), nothing is deleted;
+		 * if n == 0, the whole string is erased. */
+		sStr.erase(sStr.begin() + n, sStr.end());
+	}
+
+	std::string NormalizeDecimal(float num)
+	{
+		float mult = 1000.0f;
+		float rounded = std::round(num * mult) / mult;
+		std::ostringstream os;
+		os << std::fixed << std::setprecision(3) << rounded;
+		return os.str();
 	}
 
 }

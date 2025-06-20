@@ -1,9 +1,9 @@
 ﻿#include <filesystem>
 #include <vector>
+#include <iostream>
 #include <filesystem>
 
 #include "itgm-lib/NotesLoader.h"
-#include "itgm-lib/RageUtil.h"
 
 using namespace std;
 using namespace std::filesystem;
@@ -11,8 +11,8 @@ using namespace std::filesystem;
 
 void GetGrooveStatsHashes(Song& song)
 {
-	for (Steps& step : song.GetSteps()) {
-		std::cout << song.GetPath() << "\nStyle: " << step.GetStepsType() << "\tDifficulty: " << step.GetDifficulty() << "\tHash : " << step.GetGSHash() << "\n";
+	for (Steps* step : song.GetSteps()) {
+		std::cout << song.GetPath() << "\nStyle: " << step->GetStepsTypeString() << "\tDifficulty: " << kDifficultyToString[step->GetDifficulty()] << "\tHash: " << step->GetGSHash() << "\n";
 	}
 }
 

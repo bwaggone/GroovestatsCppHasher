@@ -1,9 +1,59 @@
+#include "BackgroundUtil.h"
 #include "Song.h"
 #include "RageUtil.h"
 
+const std::string& InstrumentTrackToString(InstrumentTrack it) {
+	return "";
+};
+
+InstrumentTrack StringToInstrumentTrack(const std::string& s) {
+	static const std::unordered_map<std::string, InstrumentTrack> instrument_map = {
+		{"InstrumentTrack_Guitar", InstrumentTrack_Guitar},
+		{"InstrumentTrack_Rhythm", InstrumentTrack_Rhythm},
+		{"InstrumentTrack_Bass", InstrumentTrack_Bass},
+		{"InstrumentTrack_Invalid", InstrumentTrack_Invalid},
+		{"NUM_InstrumentTrack", NUM_InstrumentTrack},
+	};
+	auto it = instrument_map.find(s);
+	if (it != instrument_map.end()) {
+		return it->second;
+	}
+	return InstrumentTrack_Invalid;
+};
+
+Steps* Song::CreateSteps() {
+	Steps* steps = new Steps(this);
+	InitSteps(steps);
+	return steps;
+}
+
+void Song::InitSteps(Steps* steps) {
+	steps->SetDisplayBPM(display_bpm_);
+	steps->SetMinBPM(this->min_bpm_);
+	steps->SetMaxBPM(this->max_bpm_);
+}
+
+void Song::AddSteps(Steps* steps)
+{
+	// Songs of unknown stepstype are saved as a forwards compatibility feature
+	// so that editing a simfile made by a future version that has a new style
+	// won't delete those steps. -Kyz
+	if (steps->GetStepsTypeEnum() != StepsType_Invalid)
+	{
+		steps_.push_back(steps);
+		//ASSERT_M(pSteps->m_StepsType < NUM_StepsType, ssprintf("%i", pSteps->m_StepsType));
+		//m_vpStepsByType[pSteps->m_StepsType].push_back(pSteps);
+	}
+	else
+	{
+		//m_UnknownStyleSteps.push_back(pSteps);
+	}
+}
+
+
 void Song::SetGSHashes() {
-	for (Steps& step : steps_) {
-		step.CalculateAndSetGSHash(bpms_);
+	for (Steps* step : steps_) {
+		step->CalculateGrooveStatsHash();
 	}
 }
 
@@ -32,3 +82,36 @@ void Song::SetBpms(const std::string& in) {
 
 	bpms_ = util::join(",", all_bpms);
 }
+
+void Song::SetSpecifiedLastSecond(const float f)
+{
+	this->specified_last_second = f;
+}
+
+/*const std::vector<BackgroundChange>& Song::GetBackgroundChanges(BackgroundLayer bl) const
+{
+	return *(m_BackgroundChanges[bl]);
+}
+
+std::vector<BackgroundChange>& Song::GetBackgroundChanges(BackgroundLayer bl)
+{
+	return *(m_BackgroundChanges[bl]);
+}
+
+void Song::AddBackgroundChange(BackgroundLayer iLayer, BackgroundChange seg)
+{
+	// Delete old background change at this start beat, if any.
+	auto& changes = GetBackgroundChanges(iLayer);
+	for (std::vector<BackgroundChange>::iterator bgc = changes.begin(); bgc != changes.end(); ++bgc)
+	{
+		if (bgc->m_fStartBeat == seg.m_fStartBeat)
+		{
+			GetBackgroundChanges(iLayer).erase(bgc);
+			break;
+		}
+	}
+
+	// TODO bwaggone: This
+	//BackgroundUtil::AddBackgroundChange(GetBackgroundChanges(iLayer), seg);
+}
+*/
