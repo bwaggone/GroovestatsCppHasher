@@ -151,7 +151,7 @@ namespace util {
 		for (std::size_t i = 0; i < iNumBytes; i++)
 		{
 			unsigned val = pData[i];
-			stream << std::hex << val;
+			stream << std::setfill('0') << std::setw(2) << std::hex << val;
 		}
 		std::string result(stream.str());
 		return result;
