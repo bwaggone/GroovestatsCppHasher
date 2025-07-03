@@ -83,12 +83,13 @@ bool NotesLoader::LoadFromDir(const std::string &sPath, Song &out)
 	{
 		return false;
 	}
-	// TODO: Check if sm or scc file, and change loading appropriately.
 	if (sPath.find(".ssc") != std::string::npos) {
 		SSCLoader loader;
 		loader.LoadFromSimfile(sPath, out);
 	}
 	else if (sPath.find(".sm") != std::string::npos) {
+		SMLoader loader;
+		// TODO(bwaggone): Implement LoadFromSimfile.
 		LoadFromSM(msd, out);
 	}
 

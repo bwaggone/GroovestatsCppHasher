@@ -7,6 +7,83 @@
 #include "Song.h"
 #include "RageUtil.h"
 
+struct SMSongTagInfo
+{
+	SMLoader* loader;
+	Song* song;
+	const MsdFile::value_t* params;
+	const std::string& path;
+	std::vector<std::pair<float, float>> BPMChanges, Stops;
+	SMSongTagInfo(SMLoader* l, Song* s, const std::string& p)
+		:loader(l), song(s), path(p)
+	{}
+};
+
+typedef void (*song_tag_func_t)(SMSongTagInfo& info);
+
+typedef std::map<std::string, song_tag_func_t> song_handler_map_t;
+
+struct sm_parser_helper_t
+{
+	song_handler_map_t song_tag_handlers;
+	// Unless signed, the comments in this tag list are not by me.  They were
+	// moved here when converting from the else if chain. -Kyz
+	sm_parser_helper_t()
+	{
+		/*song_tag_handlers["TITLE"] = &SMSetTitle;
+		song_tag_handlers["SUBTITLE"] = &SMSetSubtitle;
+		song_tag_handlers["ARTIST"] = &SMSetArtist;
+		song_tag_handlers["TITLETRANSLIT"] = &SMSetTitleTranslit;
+		song_tag_handlers["SUBTITLETRANSLIT"] = &SMSetSubtitleTranslit;
+		song_tag_handlers["ARTISTTRANSLIT"] = &SMSetArtistTranslit;
+		song_tag_handlers["GENRE"] = &SMSetGenre;
+		song_tag_handlers["CREDIT"] = &SMSetCredit;
+		song_tag_handlers["BANNER"] = &SMSetBanner;
+		song_tag_handlers["BACKGROUND"] = &SMSetBackground;
+		// Save "#LYRICS" for later, so we can add an internal lyrics tag.
+		song_tag_handlers["LYRICSPATH"] = &SMSetLyricsPath;
+		song_tag_handlers["CDTITLE"] = &SMSetCDTitle;
+		song_tag_handlers["MUSIC"] = &SMSetMusic;
+		song_tag_handlers["OFFSET"] = &SMSetOffset;
+		song_tag_handlers["BPMS"] = &SMSetBPMs;
+		song_tag_handlers["STOPS"] = &SMSetStops;
+		song_tag_handlers["FREEZES"] = &SMSetStops;
+		song_tag_handlers["DELAYS"] = &SMSetDelays;
+		song_tag_handlers["TIMESIGNATURES"] = &SMSetTimeSignatures;
+		song_tag_handlers["TICKCOUNTS"] = &SMSetTickCounts;
+		song_tag_handlers["INSTRUMENTTRACK"] = &SMSetInstrumentTrack;
+		song_tag_handlers["SAMPLESTART"] = &SMSetSampleStart;
+		song_tag_handlers["SAMPLELENGTH"] = &SMSetSampleLength;
+		song_tag_handlers["DISPLAYBPM"] = &SMSetDisplayBPM;
+		song_tag_handlers["SELECTABLE"] = &SMSetSelectable;
+		// It's a bit odd to have the tag that exists for backwards compatibility
+		// in this list and not the replacement, but the BGCHANGES tag has a
+		// number on the end, allowing up to NUM_BackgroundLayer tags, so it
+		// can't fit in the map. -Kyz
+		song_tag_handlers["ANIMATIONS"] = &SMSetBGChanges;
+		song_tag_handlers["FGCHANGES"] = &SMSetFGChanges;
+		song_tag_handlers["KEYSOUNDS"] = &SMSetKeysounds;
+		// Attacks loaded from file
+		song_tag_handlers["ATTACKS"] = &SMSetAttacks;
+		/* Tags that no longer exist, listed for posterity.  May their names
+		 * never be forgotten for their service to Stepmania. -Kyz
+		 * LASTBEATHINT: // unable to identify at this point: ignore
+		 * MUSICBYTES: // ignore
+		 * FIRSTBEAT: // cache tags from older SM files: ignore.
+		 * LASTBEAT: // cache tags from older SM files: ignore.
+		 * SONGFILENAME: // cache tags from older SM files: ignore.
+		 * HASMUSIC: // cache tags from older SM files: ignore.
+		 * HASBANNER: // cache tags from older SM files: ignore.
+		 * SAMPLEPATH: // SamplePath was used when the song has a separate preview clip. -aj
+		 * LEADTRACK: // XXX: Does anyone know what LEADTRACK is for? -Wolfman2000
+		 * MUSICLENGTH: // Loaded from the cache now. -Kyz
+		 */
+	}
+};
+sm_parser_helper_t sm_parser_helper;
+// End sm_parser_helper related functions. -Kyz
+/****************************************************************/
+
 void SMLoader::SetSongTitle(const std::string& title)
 {
 	this->songTitle = title;
@@ -606,4 +683,71 @@ void SMLoader::TidyUpData(Song& song, bool bFromCache)
 	{
 		song.TidyUpData(bFromCache, true);
 	}*/
+}
+
+bool SMLoader::LoadFromSimfile(const std::string& sPath, Song& out, bool bFromCache)
+{
+
+	MsdFile msd;
+	if (!msd.ReadFile(sPath, true))  // unescape
+	{
+		std::cerr << "Song file" << sPath << "couldn't be opened: " << msd.GetError().c_str();
+		return false;
+	}
+
+	SMSongTagInfo reused_song_info(&*this, &out, sPath);
+
+	for (unsigned i = 0; i < msd.GetNumValues(); i++)
+	{
+		int iNumParams = msd.GetNumParams(i);
+		const MsdFile::value_t& sParams = msd.GetValue(i);
+		std::string sValueName = sParams[0];
+		util::upper(sValueName);
+
+		reused_song_info.params = &sParams;
+		song_handler_map_t::iterator handler =
+			sm_parser_helper.song_tag_handlers.find(sValueName);
+		if (handler != sm_parser_helper.song_tag_handlers.end())
+		{
+			/* Don't use GetMainAndSubTitlesFromFullTitle; that's only for heuristically
+			 * splitting other formats that *don't* natively support #SUBTITLE. */
+			handler->second(reused_song_info);
+		}
+		// TODO: BGChanges needs more work if desired
+		//else if (Left(sValueName, strlen("BGCHANGES")) == "BGCHANGES")
+		//{
+		//	SMSetBGChanges(reused_song_info);
+		//}
+		else if (sValueName == "NOTES" || sValueName == "NOTES2")
+		{
+			if (iNumParams < 7)
+			{
+				std::cerr << "Song file" << sPath << "has " << iNumParams << " fields in a #NOTES tag, but should have at least 7.\n";
+				continue;
+			}
+
+			Steps* pNewNotes = out.CreateSteps();
+			/*LoadFromTokens(
+				sParams[1],
+				sParams[2],
+				sParams[3],
+				sParams[4],
+				sParams[5],
+				sParams[6],
+				*pNewNotes);*/
+
+			pNewNotes->SetFilename(sPath);
+			out.AddSteps(pNewNotes);
+		}
+		else
+		{
+			std::cerr << "Song file" << sPath << "has an unexpected value named " << sValueName.c_str() << "\n";
+		}
+	}
+
+	// Turn negative time changes into warps
+	// ProcessBPMsAndStops(out.timing_data_, reused_song_info.BPMChanges, reused_song_info.Stops);
+
+	TidyUpData(out, bFromCache);
+	return true;
 }
