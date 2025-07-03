@@ -20,9 +20,9 @@ PATH_TO_SONGS/15gays1pack/1UL [StarrySergal]/1UL.ssc
 Style: dance-single     Difficulty: Edit        Hash : ce9f28e1fb3271f9
 ```
 
-The program takes one argument, which is the path to the Songs directory. It
-only works on SSC and SM files. It expects a strict directory structure,
-(TODO to make it less restrictive)
+The program takes one argument, which is the path to any directory. It recursively
+reads through the directory, and if it finds an SM or SSC, will hash any stepcharts
+it finds. It prioritizes SSC if an SSC and SM are found in the same dir.
 
 The program is intended to load song data as closely to ITGm as possible,
 though exceptions to its processes are documented.
@@ -33,6 +33,5 @@ For a quick list of major differences:
   * Some extra parts of the song not used in hashing are not fully replicated (attacks, BGchanges) 
 
 TODO:
-   * Double check SM files are correct, confidence in SSC replication is much higher
+   * Finish compatibility of SM loading, SSC side is done.
    * Upload a binary for anyone to run this tool
-   * Make the arguments to pass in much more lax on directory structure.
