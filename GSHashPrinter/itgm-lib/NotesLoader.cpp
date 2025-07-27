@@ -90,7 +90,7 @@ bool NotesLoader::LoadFromDir(const std::string &sPath, Song &out)
 	else if (sPath.find(".sm") != std::string::npos) {
 		SMLoader loader;
 		// TODO(bwaggone): Implement LoadFromSimfile.
-		LoadFromSM(msd, out);
+		loader.LoadFromSimfile(sPath, out);
 	}
 
 	return false;

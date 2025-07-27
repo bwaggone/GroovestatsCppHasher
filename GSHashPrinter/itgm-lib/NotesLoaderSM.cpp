@@ -23,6 +23,155 @@ typedef void (*song_tag_func_t)(SMSongTagInfo& info);
 
 typedef std::map<std::string, song_tag_func_t> song_handler_map_t;
 
+
+// Functions for song tags go below this line. -Kyz
+/****************************************************************/
+void SMSetTitle(SMSongTagInfo& info)
+{
+	info.song->main_title = (*info.params)[1];
+	info.loader->SetSongTitle((*info.params)[1]);
+}
+void SMSetSubtitle(SMSongTagInfo& info)
+{
+	info.song->subtitle = (*info.params)[1];
+}
+void SMSetArtist(SMSongTagInfo& info)
+{
+	info.song->artist = (*info.params)[1];
+}
+void SMSetTitleTranslit(SMSongTagInfo& info)
+{
+	info.song->main_title_transliteration = (*info.params)[1];
+}
+void SMSetSubtitleTranslit(SMSongTagInfo& info)
+{
+	info.song->subtitle_transliteration = (*info.params)[1];
+}
+void SMSetArtistTranslit(SMSongTagInfo& info)
+{
+	info.song->artist_transliteration = (*info.params)[1];
+}
+void SMSetGenre(SMSongTagInfo& info)
+{
+	info.song->genre = (*info.params)[1];
+}
+void SMSetCredit(SMSongTagInfo& info)
+{
+	info.song->credit = (*info.params)[1];
+};
+void SMSetBanner(SMSongTagInfo& info)
+{
+	info.song->banner_file = (*info.params)[1];
+}
+void SMSetBackground(SMSongTagInfo& info)
+{
+	info.song->background_file = (*info.params)[1];
+}
+void SMSetLyricsPath(SMSongTagInfo& info)
+{
+	info.song->lyrics_file = (*info.params)[1];
+}
+void SMSetCDTitle(SMSongTagInfo& info)
+{
+	info.song->cd_title_file = (*info.params)[1];
+}
+void SMSetMusic(SMSongTagInfo& info)
+{
+	info.song->music_file = (*info.params)[1];
+}
+void SMSetOffset(SMSongTagInfo& info)
+{
+	info.song->timing_data_.beat0OffsetInSeconds_ = std::stof((*info.params)[1]);
+}
+void SMSetBPMs(SMSongTagInfo& info)
+{
+	info.BPMChanges.clear();
+	info.loader->ParseBPMs(info.BPMChanges, (*info.params)[1]);
+}
+void SMSetStops(SMSongTagInfo& info)
+{
+	info.Stops.clear();
+	info.loader->ParseStops(info.Stops, (*info.params)[1]);
+}
+void SMSetDelays(SMSongTagInfo& info)
+{
+	info.loader->ProcessDelays(info.song->timing_data_, (*info.params)[1]);
+}
+void SMSetTimeSignatures(SMSongTagInfo& info)
+{
+	info.loader->ProcessTimeSignatures(info.song->timing_data_, (*info.params)[1]);
+}
+void SMSetTickCounts(SMSongTagInfo& info)
+{
+	info.loader->ProcessTickcounts(info.song->timing_data_, (*info.params)[1]);
+}
+void SMSetInstrumentTrack(SMSongTagInfo& info)
+{
+	info.loader->ProcessInstrumentTracks(*info.song, (*info.params)[1]);
+}
+void SMSetSampleStart(SMSongTagInfo& info)
+{
+	info.song->music_sample_start_seconds = util::HHMMSSToSeconds((*info.params)[1]);
+}
+void SMSetSampleLength(SMSongTagInfo& info)
+{
+	info.song->music_sample_length_seconds = util::HHMMSSToSeconds((*info.params)[1]);
+}
+void SMSetDisplayBPM(SMSongTagInfo& info)
+{
+	// #DISPLAYBPM:[xxx][xxx:xxx]|[*];
+	if ((*info.params)[1] == "*")
+	{
+		info.song->SetDisplayBPM(DISPLAY_BPM_RANDOM);
+	}
+	else
+	{
+		info.song->SetDisplayBPM(DISPLAY_BPM_SPECIFIED);
+		info.song->SetMinBPM(std::stof((*info.params)[1]));
+		if ((*info.params)[2].empty())
+		{
+			info.song->SetMinBPM(info.song->GetMinBPM());
+		}
+		else
+		{
+			info.song->SetMaxBPM(std::stof((*info.params)[2]));
+		}
+	}
+}
+void SMSetSelectable(SMSongTagInfo& info)
+{
+	std::string tag = util::upper((*info.params)[1]);
+	if (tag == "YES")
+	{
+		info.song->selection_display = info.song->SHOW_ALWAYS;
+	}
+	else if (tag == "NO")
+	{
+		info.song->selection_display = info.song->SHOW_NEVER;
+	}
+	// ROULETTE from 3.9. It was removed since UnlockManager can serve
+	// the same purpose somehow. This, of course, assumes you're using
+	// unlocks. -aj
+	else if (tag == "ROULETTE")
+	{
+		info.song->selection_display = info.song->SHOW_ALWAYS;
+	}
+	/* The following two cases are just fixes to make sure simfiles that
+	 * used 3.9+ features are not excluded here */
+	else if (tag == "ES" || tag == "OMES")
+	{
+		info.song->selection_display = info.song->SHOW_ALWAYS;
+	}
+	else if (std::stoi((*info.params)[1]) > 0)
+	{
+		info.song->selection_display = info.song->SHOW_ALWAYS;
+	}
+	else
+	{
+		std::cerr << "Song file " << info.path << " has an unknown #SELECTABLE value, \"%s\"; ignored." << (*info.params)[1].c_str() << "\n";
+	}
+}
+
 struct sm_parser_helper_t
 {
 	song_handler_map_t song_tag_handlers;
@@ -30,7 +179,7 @@ struct sm_parser_helper_t
 	// moved here when converting from the else if chain. -Kyz
 	sm_parser_helper_t()
 	{
-		/*song_tag_handlers["TITLE"] = &SMSetTitle;
+		song_tag_handlers["TITLE"] = &SMSetTitle;
 		song_tag_handlers["SUBTITLE"] = &SMSetSubtitle;
 		song_tag_handlers["ARTIST"] = &SMSetArtist;
 		song_tag_handlers["TITLETRANSLIT"] = &SMSetTitleTranslit;
@@ -60,7 +209,7 @@ struct sm_parser_helper_t
 		// in this list and not the replacement, but the BGCHANGES tag has a
 		// number on the end, allowing up to NUM_BackgroundLayer tags, so it
 		// can't fit in the map. -Kyz
-		song_tag_handlers["ANIMATIONS"] = &SMSetBGChanges;
+		/*song_tag_handlers["ANIMATIONS"] = &SMSetBGChanges;
 		song_tag_handlers["FGCHANGES"] = &SMSetFGChanges;
 		song_tag_handlers["KEYSOUNDS"] = &SMSetKeysounds;
 		// Attacks loaded from file
@@ -266,6 +415,128 @@ void SMLoader::ProcessFakes(TimingData& out, const std::string line, const int r
 			std::cout << "Song file " << this->GetSongTitle() << " has an invalid Fake beat " << fBeat << " beats to skip " << fSkippedBeats << "\n";
 		}
 	}
+}
+
+
+void SMLoader::ParseBPMs(std::vector<std::pair<float, float>>& out, const std::string line, const int rowsPerBeat)
+{
+	std::vector<std::string> arrayBPMChangeExpressions;
+	util::split(line, ",", arrayBPMChangeExpressions);
+
+	for (unsigned b = 0; b < arrayBPMChangeExpressions.size(); b++)
+	{
+		std::vector<std::string> arrayBPMChangeValues;
+		util::Trim(arrayBPMChangeExpressions[b]);
+		if (arrayBPMChangeExpressions[b].empty()) {
+			continue;
+		}
+		util::split(arrayBPMChangeExpressions[b], "=", arrayBPMChangeValues);
+		if (arrayBPMChangeValues.size() != 2)
+		{
+			std::cerr << "Song file " <<
+				this->GetSongTitle() <<
+				"has an invalid #BPMs value \"%s\" (must have exactly one '='), ignored. " <<
+				arrayBPMChangeExpressions[b].c_str();
+			continue;
+		}
+
+		const float fBeat = RowToBeat(arrayBPMChangeValues[0], rowsPerBeat);
+		const float fNewBPM = std::stof(arrayBPMChangeValues[1]);
+		if (fNewBPM == 0) {
+			std::cerr << "Song file " << this->GetSongTitle() <<
+				" has a zero BPM; ignored.\n";
+			continue;
+		}
+
+		out.push_back(std::make_pair(fBeat, fNewBPM));
+	}
+}
+
+void SMLoader::ParseStops(std::vector<std::pair<float, float>>& out, const std::string line, const int rowsPerBeat)
+{
+	std::vector<std::string> arrayFreezeExpressions;
+	util::split(line, ",", arrayFreezeExpressions);
+
+	for (unsigned f = 0; f < arrayFreezeExpressions.size(); f++)
+	{
+		std::vector<std::string> arrayFreezeValues;
+		util::Trim(arrayFreezeExpressions[f]);
+		if (arrayFreezeExpressions[f].empty()) {
+			continue;
+		}
+		util::split(arrayFreezeExpressions[f], "=", arrayFreezeValues);
+		if (arrayFreezeValues.size() != 2)
+		{
+			std::cerr << "Song file " <<
+				this->GetSongTitle() <<
+				"has an invalid #STOPS value \"%s\" (must have exactly one '='), ignored. "<<
+				arrayFreezeExpressions[f].c_str() << "\n";
+			continue;
+		}
+
+		const float fFreezeBeat = RowToBeat(arrayFreezeValues[0], rowsPerBeat);
+		const float fFreezeSeconds = std::stof(arrayFreezeValues[1]);
+		if (fFreezeSeconds == 0) {
+			std::cerr << "Song file " << this->GetSongTitle() <<
+				" has a zero-length stop; ignored.\n";
+			continue;
+		}
+
+		out.push_back(std::make_pair(fFreezeBeat, fFreezeSeconds));
+	}
+}
+
+
+void SMLoader::LoadFromTokens(
+	std::string sStepsType,
+	std::string sDescription,
+	std::string sDifficulty,
+	std::string sMeter,
+	std::string sRadarValues,
+	std::string sNoteData,
+	Steps& out
+)
+{
+
+	util::Trim(sStepsType);
+	util::Trim(sDescription);
+	util::Trim(sDifficulty);
+	util::Trim(sNoteData);
+
+	out.SetStepsTypeStr(sStepsType);
+	out.SetStepsType(sStepsType);
+	out.SetDescription(sDescription);
+	out.SetCredit(sDescription); // this is often used for both.
+	out.SetChartName(sDescription); // yeah, one more for good measure.
+	out.SetDifficulty(OldStyleStringToDifficulty(sDifficulty));
+
+	std::string desc_lower = sDescription;
+	std::transform(desc_lower.begin(), desc_lower.end(), desc_lower.begin(), ::tolower);
+
+	// Handle hacks that originated back when StepMania didn't have
+	// Difficulty_Challenge. (At least v1.64, possibly v3.0 final...)
+	if (out.GetDifficulty() == Difficulty_Hard)
+	{
+		// HACK: SMANIAC used to be Difficulty_Hard with a special description.
+		if (desc_lower == "smaniac")
+			out.SetDifficulty(Difficulty_Challenge);
+
+		// HACK: CHALLENGE used to be Difficulty_Hard with a special description.
+		if (desc_lower == "challenge")
+			out.SetDifficulty(Difficulty_Challenge);
+	}
+
+	if (sMeter.empty())
+	{
+		// some simfiles (e.g. X-SPECIALs from Zenius-I-Vanisher) don't
+		// have a meter on certain steps. Make the meter 1 in these instances.
+		sMeter = "1";
+	}
+	out.SetMeter(std::stoi(sMeter));
+
+	out.SetSMNoteData(sNoteData);
+
+	out.TidyUpData();
 }
 
 void SMLoader::ProcessBGChanges(Song& out, const std::string& sValueName, const std::string& sPath, const std::string& sParam)
@@ -685,6 +956,242 @@ void SMLoader::TidyUpData(Song& song, bool bFromCache)
 	}*/
 }
 
+// Utility function for sorting timing change data
+namespace {
+	bool compare_first(std::pair<float, float> a, std::pair<float, float> b) {
+		return a.first < b.first;
+	}
+}
+
+// Precondition: no BPM change or stop has 0 for its value (change.second).
+//     (The ParseBPMs and ParseStops functions make sure of this.)
+// Postcondition: all BPM changes, stops, and warps are added to the out
+//     parameter, already sorted by beat.
+void SMLoader::ProcessBPMsAndStops(TimingData& out,
+	std::vector<std::pair<float, float>>& vBPMs,
+	std::vector<std::pair<float, float>>& vStops)
+{
+	std::vector<std::pair<float, float>>::const_iterator ibpm, ibpmend;
+	std::vector<std::pair<float, float>>::const_iterator istop, istopend;
+
+	// Current BPM (positive or negative)
+	float bpm = 0;
+	// Beat at which the previous timing change occurred
+	float prevbeat = 0;
+	// Start/end of current warp (-1 if not currently warping)
+	float warpstart = -1;
+	float warpend = -1;
+	// BPM prior to current warp, to detect if it has changed
+	float prewarpbpm = 0;
+	// How far off we have gotten due to negative changes
+	float timeofs = 0;
+
+	// Sort BPM changes and stops by beat.  Order matters.
+	// TODO: Make sorted lists a precondition rather than sorting them here.
+	// The caller may know that the lists are sorted already (e.g. if
+	// loaded from cache).
+	stable_sort(vBPMs.begin(), vBPMs.end(), compare_first);
+	stable_sort(vStops.begin(), vStops.end(), compare_first);
+
+	// Convert stops that come before beat 0.  All these really do is affect
+	// where the arrows are with respect to the music, i.e. the song offset.
+	// Positive stops subtract from the offset, and negative add to it.
+	istop = vStops.begin();
+	istopend = vStops.end();
+	for (/* istop */; istop != istopend && istop->first < 0; istop++)
+	{
+		out.beat0OffsetInSeconds_ -= istop->second;
+	}
+
+	// Get rid of BPM changes that come before beat 0.  Positive BPMs before
+	// the chart don't really do anything, so we just ignore them.  Negative
+	// BPMs cause unpredictable behavior, so ignore them as well and issue a
+	// warning.
+	ibpm = vBPMs.begin();
+	ibpmend = vBPMs.end();
+	for (/* ibpm */; ibpm != ibpmend && ibpm->first <= 0; ibpm++)
+	{
+		bpm = ibpm->second;
+		if (bpm < 0 && ibpm->first < 0)
+		{
+			std::cerr << "Song file" << this->GetSongTitle() <<
+				"has a negative BPM prior to beat 0.  " <<
+				"These cause problems; ignoring.\n";
+		}
+	}
+
+	// It's beat 0.  Do you know where your BPMs are?
+	if (bpm == 0)
+	{
+		// Nope.  Can we just use the next BPM value?
+		if (ibpm == ibpmend)
+		{
+			// Nope.
+			bpm = 60;
+			std::cerr << "Song file " << this->GetSongTitle() <<
+				"has no valid BPMs.  Defaulting to 60.\n";
+		}
+		else
+		{
+			// Yep.  Get the next BPM.
+			ibpm++;
+			bpm = ibpm->second;
+			std::cerr << "Song file" << this->GetSongTitle() <<
+				"does not establish a BPM before beat 0.  "
+				"Using the value from the next BPM change.\n";
+		}
+	}
+	// We always want to have an initial BPM.  If we start out warping, this
+	// BPM will be added later.  If we start with a regular BPM, add it now.
+	if (bpm > 0 && bpm <= FAST_BPM_WARP)
+	{
+		out.AddSegment(BPMSegment(BeatToNoteRow(0), bpm));
+	}
+
+	// Iterate over all BPMs and stops in tandem
+	while (ibpm != ibpmend || istop != istopend)
+	{
+		// Get the next change in order, with BPMs taking precedence
+		// when they fall on the same beat.
+		bool changeIsBpm = istop == istopend || (ibpm != ibpmend && ibpm->first <= istop->first);
+		const std::pair<float, float>& change = changeIsBpm ? *ibpm : *istop;
+
+		// Calculate the effects of time at the current BPM.  "Infinite"
+		// BPMs (SM4 warps) imply that zero time passes, so skip this
+		// step in that case.
+		if (bpm <= FAST_BPM_WARP)
+		{
+			timeofs += (change.first - prevbeat) * 60 / bpm;
+
+			// If we were in a warp and it finished during this
+			// timeframe, create the warp segment.
+			if (warpstart >= 0 && bpm > 0 && timeofs > 0)
+			{
+				// timeofs represents how far past the end we are
+				warpend = change.first - (timeofs * bpm / 60);
+				out.AddSegment(WarpSegment(BeatToNoteRow(warpstart),
+					warpend - warpstart));
+
+				// If the BPM changed during the warp, put that
+				// change at the beginning of the warp.
+				if (bpm != prewarpbpm)
+				{
+					out.AddSegment(BPMSegment(BeatToNoteRow(warpstart), bpm));
+				}
+				// No longer warping
+				warpstart = -1;
+			}
+		}
+
+		// Save the current beat for the next round of calculations
+		prevbeat = change.first;
+
+		// Now handle the timing changes themselves
+		if (changeIsBpm)
+		{
+			// Does this BPM change start a new warp?
+			if (warpstart < 0 && (change.second < 0 || change.second > FAST_BPM_WARP))
+			{
+				// Yes.
+				warpstart = change.first;
+				prewarpbpm = bpm;
+				timeofs = 0;
+			}
+			else if (warpstart < 0)
+			{
+				// No, and we aren't currently warping either.
+				// Just a normal BPM change.
+				out.AddSegment(BPMSegment(BeatToNoteRow(change.first), change.second));
+			}
+			bpm = change.second;
+			ibpm++;
+		}
+		else
+		{
+			// Does this stop start a new warp?
+			if (warpstart < 0 && change.second < 0)
+			{
+				// Yes.
+				warpstart = change.first;
+				prewarpbpm = bpm;
+				timeofs = change.second;
+			}
+			else if (warpstart < 0)
+			{
+				// No, and we aren't currently warping either.
+				// Just a normal stop.
+				out.AddSegment(StopSegment(BeatToNoteRow(change.first), change.second));
+			}
+			else
+			{
+				// We're warping already.  Stops affect the time
+				// offset directly.
+				timeofs += change.second;
+
+				// If a stop overcompensates for the time
+				// deficit, the warp ends and we stop for the
+				// amount it goes over.
+				if (change.second > 0 && timeofs > 0)
+				{
+					warpend = change.first;
+					out.AddSegment(WarpSegment(BeatToNoteRow(warpstart),
+						warpend - warpstart));
+					out.AddSegment(StopSegment(BeatToNoteRow(change.first), timeofs));
+
+					// Now, are we still warping because of
+					// the BPM value?
+					if (bpm < 0 || bpm > FAST_BPM_WARP)
+					{
+						// Yep.
+						warpstart = change.first;
+						// prewarpbpm remains the same
+						timeofs = 0;
+					}
+					else
+					{
+						// Nope, warp is done.  Add any
+						// BPM change that happened in
+						// the meantime.
+						if (bpm != prewarpbpm)
+						{
+							out.AddSegment(BPMSegment(BeatToNoteRow(warpstart), bpm));
+						}
+						warpstart = -1;
+					}
+				}
+			}
+			istop++;
+		}
+	}
+
+	// If we are still warping, we now have to consider the time remaining
+	// after the last timing change.
+	if (warpstart >= 0)
+	{
+		// Will this warp ever end?
+		if (bpm < 0 || bpm > FAST_BPM_WARP)
+		{
+			// No, so it ends the entire chart immediately.
+			// XXX There must be a less hacky and more accurate way
+			// to do this.
+			warpend = 99999999.0f;
+		}
+		else
+		{
+			// Yes.  Figure out when it will end.
+			warpend = prevbeat - (timeofs * bpm / 60);
+		}
+		out.AddSegment(WarpSegment(BeatToNoteRow(warpstart),
+			warpend - warpstart));
+
+		// As usual, record any BPM change that happened during the warp
+		if (bpm != prewarpbpm)
+		{
+			out.AddSegment(BPMSegment(BeatToNoteRow(warpstart), bpm));
+		}
+	}
+}
+
 bool SMLoader::LoadFromSimfile(const std::string& sPath, Song& out, bool bFromCache)
 {
 
@@ -727,27 +1234,29 @@ bool SMLoader::LoadFromSimfile(const std::string& sPath, Song& out, bool bFromCa
 			}
 
 			Steps* pNewNotes = out.CreateSteps();
-			/*LoadFromTokens(
+			LoadFromTokens(
 				sParams[1],
 				sParams[2],
 				sParams[3],
 				sParams[4],
 				sParams[5],
 				sParams[6],
-				*pNewNotes);*/
+				*pNewNotes);
 
 			pNewNotes->SetFilename(sPath);
 			out.AddSteps(pNewNotes);
 		}
 		else
 		{
-			std::cerr << "Song file" << sPath << "has an unexpected value named " << sValueName.c_str() << "\n";
+			std::cerr << "Song file " << sPath << " has an unexpected value named " << sValueName.c_str() << "\n";
 		}
 	}
 
 	// Turn negative time changes into warps
-	// ProcessBPMsAndStops(out.timing_data_, reused_song_info.BPMChanges, reused_song_info.Stops);
+	ProcessBPMsAndStops(out.timing_data_, reused_song_info.BPMChanges, reused_song_info.Stops);
 
 	TidyUpData(out, bFromCache);
+	// This part is not done in the original ITGm implementation, but placed here for simplicity.
+	out.SetGSHashes();
 	return true;
 }
