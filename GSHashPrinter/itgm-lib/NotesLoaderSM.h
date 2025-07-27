@@ -62,6 +62,18 @@ public:
 	virtual std::string GetSongTitle() const;
 
 	float RowToBeat(std::string line, const int rowsPerBeat);
+	void LoadFromTokens(
+		std::string sStepsType,
+		std::string sDescription,
+		std::string sDifficulty,
+		std::string sMeter,
+		std::string sRadarValues,
+		std::string sNoteData,
+		Steps& out
+	);
+	void ProcessBPMsAndStops(TimingData& out,
+		std::vector<std::pair<float, float>>& vBPMs,
+		std::vector<std::pair<float, float>>& vStops);
 
 	void ProcessInstrumentTracks(Song& out, const std::string& sParam);
 	void ProcessBGChanges(Song& out, const std::string& sValueName, const std::string& sPath, const std::string& sParam);
@@ -76,6 +88,12 @@ public:
 	virtual void ProcessSpeeds(TimingData& out, const std::string line, const int rowsPerBeat = -1);
 	virtual void ProcessCombos(TimingData&,const std::string line, const int rowsPerBeat = -1) {}
 	virtual void ProcessFakes(TimingData& out, const std::string line, const int rowsPerBeat = -1);
+	void ParseBPMs(std::vector<std::pair<float, float>>& out,
+		const std::string line,
+		const int rowsPerBeat = -1);
+	void ParseStops(std::vector<std::pair<float, float>>& out,
+		const std::string line,
+		const int rowsPerBeat = -1);
 	void TidyUpData(Song& song, bool bFromCache);
 
 private:

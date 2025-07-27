@@ -35,6 +35,7 @@ public:
 	void Steps::Decompress() const;
 	void GetNoteData(NoteData& noteDataOut) const;
 	void GetSMNoteData(std::string& notes_comp_out) const;
+	void SetCredit(std::string credit) { credit_ = credit; }
 
 
 	std::string GetGSHash() { return groovestats_hash_; }
@@ -65,6 +66,7 @@ private:
 	std::string filename_;
 	std::string chart_name_;
 	std::string steps_type_str_;
+	std::string credit_;
 	StepsType steps_type_;
 	std::string chart_style_;
 	Difficulty difficulty_;

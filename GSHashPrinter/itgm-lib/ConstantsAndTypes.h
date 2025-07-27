@@ -1,6 +1,8 @@
 #ifndef CONSTANTSANDTYPES_H
 #define CONSTANTSANDTYPES_H
 
+#include <algorithm>
+#include <string>
 #include <unordered_map>
 
 const int kMaxStepsDescriptionLength = 255;
@@ -137,6 +139,37 @@ static std::unordered_map<Difficulty, std::string> kDifficultyToString = {
 { Difficulty_Challenge, "challenge" },
 { Difficulty_Edit, "edit" }
 };
+
+// Used for SM files. SSC files use the above converters.
+struct OldStyleStringToDifficultyMapHolder
+{
+	std::unordered_map<std::string, Difficulty> conversion_map;
+	OldStyleStringToDifficultyMapHolder()
+	{
+		conversion_map["beginner"] = Difficulty_Beginner;
+		conversion_map["easy"] = Difficulty_Easy;
+		conversion_map["basic"] = Difficulty_Easy;
+		conversion_map["light"] = Difficulty_Easy;
+		conversion_map["medium"] = Difficulty_Medium;
+		conversion_map["another"] = Difficulty_Medium;
+		conversion_map["trick"] = Difficulty_Medium;
+		conversion_map["standard"] = Difficulty_Medium;
+		conversion_map["difficult"] = Difficulty_Medium;
+		conversion_map["hard"] = Difficulty_Hard;
+		conversion_map["ssr"] = Difficulty_Hard;
+		conversion_map["maniac"] = Difficulty_Hard;
+		conversion_map["heavy"] = Difficulty_Hard;
+		conversion_map["smaniac"] = Difficulty_Challenge;
+		conversion_map["challenge"] = Difficulty_Challenge;
+		conversion_map["expert"] = Difficulty_Challenge;
+		conversion_map["oni"] = Difficulty_Challenge;
+		conversion_map["edit"] = Difficulty_Edit;
+	};
+};
+
+
+static OldStyleStringToDifficultyMapHolder OldStyleStringToDifficulty_converter;
+Difficulty OldStyleStringToDifficulty(const std::string& sDC);
 
 
 enum RadarCategory

@@ -178,14 +178,13 @@ void SetSelectable(SongTagInfo& info)
 	{
 		info.song->selection_display = info.song->SHOW_ALWAYS;
 	}
-	// Bwaggone note: Does this cause a potential crash?
 	else if (std::stof(tag) > 0)
 	{
 		info.song->selection_display = info.song->SHOW_ALWAYS;
 	}
 	else
 	{
-	// Unknown value
+		std::cerr << "Song file " << info.path << " has an unknown #SELECTABLE value, \"%s\"; ignored." << (*info.params)[1].c_str() << "\n";
 	}
 }
 void SetBGChanges(SongTagInfo& info)
