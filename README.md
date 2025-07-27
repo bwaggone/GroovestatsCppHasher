@@ -34,3 +34,4 @@ For a quick list of major differences:
 
 TODO:
    * Upload a binary for anyone to run this tool
+   * Different types of outputs? CSV, TSV, etc...
