@@ -30,8 +30,7 @@ though exceptions to its processes are documented.
 For a quick list of major differences:
   * s/RString/std::string
   * Due to this, ssprintf and other custom functions are reworked using standard library functions
-  * Some extra parts of the song not used in hashing are not fully replicated (attacks, BGchanges) 
+  * Some extra parts of the song not used in hashing are not fully replicated (attacks, BGchanges)
 
 TODO:
-   * Finish compatibility of SM loading, SSC side is done.
    * Upload a binary for anyone to run this tool
